@@ -2,6 +2,7 @@ package main
 
 import "code.google.com/p/go.exp/inotify"
 import "fmt"
+import "log"
 
 func main() {
   
