@@ -8,12 +8,17 @@ func main() {
   
   watcher, err := inotify.NewWatcher()
   if err != nil {
-    fmt.Println("inotify error:", err) //log.Fatal(err)
+    log.Fatal(err)
   }
   err = watcher.Watch("./watch_folder")
   if err != nil {
-    fmt.Println("Watch error:", err) //log.Fatal(err)
+    log.Fatal(err)
   }
+  err = watcher.Watch("./watch_folder/nest1")
+  if err != nil {
+    log.Fatal(err)
+  }
+  
   for {
     select {
     case ev := <-watcher.Event:
