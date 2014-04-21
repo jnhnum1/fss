@@ -4,7 +4,7 @@ import "code.google.com/p/go.exp/inotify"
 import "fmt"
 import "log"
 
-func main() {
+func file_watcher() {
   
   watcher, err := inotify.NewWatcher()
   if err != nil {
@@ -27,6 +27,4 @@ func main() {
         log.Println("error:", err)
     }
   }
-  
-  fmt.Println("Hello, playground")
 }
