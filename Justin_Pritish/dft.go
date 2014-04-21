@@ -8,7 +8,7 @@ import (
 
 func spaces(depth int) {
     for i:=0; i<depth; i++ {
-        fmt.Printf(" ")
+        fmt.Printf("|")
     }
     fmt.Printf("|- ")
 }
@@ -32,14 +32,15 @@ func DFT(dirname string, depth int) {
         }
         if fi.IsDir() {
             spaces(depth)
-            fmt.Println(fi.Name(), ":")
-            //fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":")
+            //fmt.Println(fi.Name(), ":")
+            fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
             DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
         }
     }
 }
 
 func main() {
-    dirname := "." + string(filepath.Separator)
+    root_folder := "watch_folder"
+    dirname := "." + string(filepath.Separator) + root_folder + string(filepath.Separator)
     DFT(dirname, 0)
 }
