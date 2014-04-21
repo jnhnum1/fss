@@ -4,16 +4,21 @@ import "code.google.com/p/go.exp/inotify"
 import "fmt"
 import "log"
 
-func main() {
+func file_watcher() {
   
   watcher, err := inotify.NewWatcher()
   if err != nil {
-    fmt.Println("inotify error:", err) //log.Fatal(err)
+    log.Fatal(err)
   }
   err = watcher.Watch("./watch_folder")
   if err != nil {
-    fmt.Println("Watch error:", err) //log.Fatal(err)
+    log.Fatal(err)
   }
+  err = watcher.Watch("./watch_folder/nest1")
+  if err != nil {
+    log.Fatal(err)
+  }
+  
   for {
     select {
     case ev := <-watcher.Event:
@@ -22,6 +27,4 @@ func main() {
         log.Println("error:", err)
     }
   }
-  
-  fmt.Println("Hello, playground")
 }
