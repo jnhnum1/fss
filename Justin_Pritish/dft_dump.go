@@ -1,15 +1,13 @@
 package main
 
 import (
-    //"encoding/gob"
-    //"log"
+    "encoding/gob"
+    "log"
     "fmt"
     "os"
     "path/filepath"
     "time"
 )
-
-
 
 type FSnode struct {
     Name string
@@ -32,8 +30,6 @@ func spaces(depth int) {
 }
 
 func FST_create(dirname string, depth int, fst *FStree) {
-
-    //fst.Tree[dirname].Children = make(map[string]bool)
     
     d, err := os.Open(dirname)
     if err != nil {
@@ -79,18 +75,6 @@ func FST_create(dirname string, depth int, fst *FStree) {
     }
 }
 
-func FST_parse(fst *FStree, dirname string) {
-    for child, _ := range fst.Tree[dirname].Children {
-        spaces(fst.Tree[dirname].Depth)
-        if fst.Tree[child].IsDir {
-            fmt.Println(child, ":", fst.Tree[child].ModTime)
-            FST_parse(fst, child)
-        } else {
-            fmt.Println(fst.Tree[child].Name, "size:", fst.Tree[child].Size, "mod:", fst.Tree[child].ModTime)
-        }
-    }
-}
-
 func main() {
 
     root_folder := "watch_folder"
@@ -105,10 +89,19 @@ func main() {
 
     FST_create(dirname, 0, fst)
 
+    /*
     for k,v := range fst.Tree {
         fmt.Println(k, v)
     }
+    */
 
-    fmt.Println("-----")
-    FST_parse(fst, dirname)
+    f, err := os.OpenFile("FST_watch", os.O_WRONLY | os.O_CREATE, 0777)
+    if err != nil {
+        log.Println("Error opening file:", err)
+    }
+
+    encoder := gob.NewEncoder(f)
+    encoder.Encode(fst)
+    f.Close()
+    fmt.Println("FST_watch dumped!")
 }
