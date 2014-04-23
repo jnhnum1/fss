@@ -1,7 +1,6 @@
 package main
 
 import "code.google.com/p/go.exp/inotify"
-import "fmt"
 import "log"
 
 func file_watcher() {
@@ -27,4 +26,8 @@ func file_watcher() {
         log.Println("error:", err)
     }
   }
+}
+
+func main() {
+  file_watcher()
 }
