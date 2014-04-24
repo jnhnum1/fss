@@ -13,6 +13,7 @@ func spaces(depth int) {
     fmt.Printf("|- ")
 }
 
+
 func DFT(dirname string, depth int) {
     d, err := os.Open(dirname)
     if err != nil {
