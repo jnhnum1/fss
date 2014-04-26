@@ -5,7 +5,6 @@ package main
 import "log"
 import "io/ioutil"
 
-
 func main() {
 
   d, err := ioutil.ReadFile("./watch_folder/a_meeting_by_the_river.mp3")
