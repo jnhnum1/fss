@@ -54,6 +54,8 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
               log.Println(tnt.me, ": Error writing file:", err)
           }
       }
+  } else {
+      log.Println(tnt.me, ": GetFile RPC failed")
   }
 
   return reply.Err
