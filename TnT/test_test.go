@@ -47,9 +47,10 @@ func TestGetFile(t *testing.T) {
   tnts, clean := setup("getfile")
   defer clean()
 
-  fmt.Println("Test: GetFile ...\n")
+  fmt.Println("Test: GetFile ...")
 
-  path := "a_meeting_by_the_river.mp3"
+  //path := "a_meeting_by_the_river.mp3"
+  path := "hw.txt"
 
   err := tnts[1].CopyFileFromPeer(0, path, path)
   if err != nil {
@@ -57,5 +58,5 @@ func TestGetFile(t *testing.T) {
       t.Fatal("")
   }
   
-  fmt.Println("  ... Passed\n")
+  fmt.Println("  ... Passed")
 }

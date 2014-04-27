@@ -3,6 +3,7 @@ package TnT
 import (
   "fmt"
   "net/rpc"
+  "os"
 )
 
 type GetFileArgs struct {
@@ -11,6 +12,7 @@ type GetFileArgs struct {
 
 type GetFileReply struct {
   Content []byte
+  Perm os.FileMode
   Err error
 }
 

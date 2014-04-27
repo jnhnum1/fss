@@ -22,13 +22,18 @@ type TnTServer struct {
 
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
   data, err := ioutil.ReadFile(tnt.root + args.FilePath)
-  
+  fi, err1 := os.Lstat(tnt.root + args.FilePath)
+
   if err != nil {
-    log.Println(tnt.me, " : Error opening file:", err)
-    reply.Err = err
+      log.Println(tnt.me, " : Error opening file:", err)
+      reply.Err = err
+  } else if err1 != nil {
+      log.Println(tnt.me, " : Error opening file:", err1)
+      reply.Err = err1
   } else {
-    reply.Content = data
-    reply.Err = nil
+      reply.Content = data
+      reply.Perm = fi.Mode().Perm()
+      reply.Err = nil
   }
 
   return nil
@@ -44,7 +49,7 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
       if reply.Err != nil {
           log.Println(tnt.me, ": Error opening file:", reply.Err)
       } else {
-          err := ioutil.WriteFile(tnt.root + dest, reply.Content, 0644)
+          err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
           if err != nil {
               log.Println(tnt.me, ": Error writing file:", err)
           }
