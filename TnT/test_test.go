@@ -105,14 +105,17 @@ func TestWatchFolder(t *testing.T) {
 
   FST_parse_watch(&fst1, dirname, watcher)
 
-
+  FST_watch_files(&fst1, dirname, watcher)
   for {
+    /*
       select {
       case ev := <-watcher.Event:
           log.Println("event:", ev)
+
       case err := <-watcher.Error:
           log.Println("error:", err)
       }
+      */
   }
 }
 

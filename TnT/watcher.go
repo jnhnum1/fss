@@ -12,6 +12,7 @@ import (
 type FSnode struct {
     Name string
     Size int64
+    FD uintptr
     ModTime time.Time
     IsDir bool
     Depth int
@@ -75,7 +76,8 @@ func FST_create(dirname string, depth int, fst *FStree) {
         spaces(depth)
         if fi.Mode().IsRegular() {
             child_name := dirname+fi.Name()
-            fmt.Println(fi.Name(), "size:", fi.Size(), "mod:", fi.ModTime())
+            //fmt.Println(fi.Name(), "size:", fi.Size(), "mod:", fi.ModTime())
+            fmt.Println(fi)
 
             //fsn := FSnode{Name:fi.Name(), Size:fi.Size(), ModTime:fi.ModTime(), IsDir:fi.IsDir()}
             fst.Tree[child_name] = new(FSnode)
@@ -110,6 +112,7 @@ func FST_parse_watch(fst *FStree, dirname string, watcher *inotify.Watcher) {
         log.Fatal(err)
     }
     for child, _ := range fst.Tree[dirname].Children {
+        //fmt.Println("start of loop", fst.Tree[child])
         spaces(fst.Tree[dirname].Depth)
         if fst.Tree[child].IsDir {
             fmt.Println(child, ":", fst.Tree[child].ModTime)
@@ -118,7 +121,29 @@ func FST_parse_watch(fst *FStree, dirname string, watcher *inotify.Watcher) {
             fmt.Println(fst.Tree[child].Name, "size:", fst.Tree[child].Size, "mod:", fst.Tree[child].ModTime)
         }
     }
+}
 
-
+func FST_watch_files(fst *FStree, dirname string, watcher *inotify.Watcher){
+    fmt.Println("in FST_watch_files")
+    fmt.Println(fst.Tree[dirname])
+    for {
+      select {
+      case ev := <-watcher.Event:
+          //log.Println("event:", ev)
+          for child,_ := range fst.Tree[dirname].Children{
+            //fmt.Println(dirname+"/"+fst.Tree[child].Name, ev.Name)
+            if(dirname+"/"+fst.Tree[child].Name == ev.Name){
+                d,_ := os.Open(ev.Name)
+                fi, _ := d.Stat()
+                fmt.Println(fi.ModTime(),fst.Tree[child].ModTime)
+                //d.Close()
+                //fmt.Println(fst.Tree[child], fst.Tree[child].fd)
+            }
+          }
+          
+      case err := <-watcher.Error:
+          log.Println("error:", err)
+      }
+    } 
 }
 
