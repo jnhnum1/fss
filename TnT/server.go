@@ -20,6 +20,33 @@ type TnTServer struct {
   root string
 }
 
+//ToDo-Deepak
+//This function is supposed to add a file/directory to watch
+//Let us assume that it is already recursive
+func (tnt *TnTServer) AddWatch() error{
+}
+
+//ToDo-Deepak
+//This function is supposed to remove a file/directory from watch
+func (tnt *TnTServer) RemoveWatch() error{
+}
+
+//ToDo-Deepak
+//This function implements the two machine sync
+//Semantics: I sync with the other machine, i.e. I want to ensure that I am as new as the other machine
+func (tnt *TnTServer) Sync() error{
+}
+
+//ToDo-Deepak
+//This function implements the check on all the files that we have after a crash
+func (tnt *TnTServer) CheckAfterCrash() error{
+}
+
+//ToDo-Deepak
+//This function is supposed to log the version vectors on the disk.
+func (tnt *TnTServer) LogToDisk() error{
+}
+
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
   data, err := ioutil.ReadFile(tnt.root + args.FilePath)
   fi, err1 := os.Lstat(tnt.root + args.FilePath)
