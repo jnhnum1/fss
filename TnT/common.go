@@ -7,9 +7,14 @@ import (
 )
 
 const(
-  IN_MODIFY = 0x2
+  IN_ATTRIB = 0x4
+  IN_CLOSE = 0x8
   IN_CREATE = 0x100
+  IN_CREATE_ISDIR = 0x40000100
   IN_DELETE = 0x200
+  IN_IGNORED = 0x8000
+  IN_MODIFY = 0x2
+  IN_OPEN = 0x20
 )
 
 type GetFileArgs struct {

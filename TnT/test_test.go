@@ -85,9 +85,10 @@ func TestWatchFolder(t *testing.T) {
   }
 
   test_server := 0
-  dirname := root_folder + strconv.Itoa(test_server)+"/"
+  dirname := root_folder + strconv.Itoa(test_server)
 
   tnts[test_server].FST_set_watch(dirname, watcher)
+  dirname = root_folder + strconv.Itoa(test_server) + "/"
   tnts[test_server].FST_watch_files(dirname, watcher)
   for {
 

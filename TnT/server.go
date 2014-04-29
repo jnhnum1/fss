@@ -119,6 +119,8 @@ func StartServer(servers []string, me int, root string) *TnTServer {
   tnt.me = me
   tnt.servers = servers
   tnt.root = root
+  fmt.Println(root+"*~")
+  os.Remove(root+"*~")
 
     //setup the watch
   tnt.Tree = new(FStree)
