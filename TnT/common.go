@@ -6,6 +6,12 @@ import (
   "os"
 )
 
+const(
+  IN_MODIFY = 0x2
+  IN_CREATE = 0x100
+  IN_DELETE = 0x200
+)
+
 type GetFileArgs struct {
   FilePath string
 }

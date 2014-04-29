@@ -9,6 +9,7 @@ import (
   "os"
   "io/ioutil"
   "encoding/gob"
+  "time"
 )
 
 type TnTServer struct {
@@ -18,8 +19,26 @@ type TnTServer struct {
   dead bool
   servers []string
   root string
+  Tree *FStree
 }
 
+type FStree struct {
+    MyTree map[string] *FSnode
+}
+
+type FSnode struct {
+    Name string
+    Size int64
+    ModTime time.Time
+    IsDir bool
+    Depth int
+    Children map[string]bool
+    VerVect int
+    SyncVect int
+}
+
+
+/*
 //ToDo-Deepak
 //This function is supposed to add a file/directory to watch
 //Let us assume that it is already recursive
@@ -46,7 +65,7 @@ func (tnt *TnTServer) CheckAfterCrash() error{
 //This function is supposed to log the version vectors on the disk.
 func (tnt *TnTServer) LogToDisk() error{
 }
-
+*/
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
   data, err := ioutil.ReadFile(tnt.root + args.FilePath)
   fi, err1 := os.Lstat(tnt.root + args.FilePath)
@@ -100,6 +119,15 @@ func StartServer(servers []string, me int, root string) *TnTServer {
   tnt.me = me
   tnt.servers = servers
   tnt.root = root
+
+    //setup the watch
+  tnt.Tree = new(FStree)
+  tnt.Tree.MyTree = make(map[string]*FSnode)
+  tnt.Tree.MyTree[root] = new(FSnode)
+  tnt.Tree.MyTree[root].Name = root
+  tnt.Tree.MyTree[root].Depth = 0
+  tnt.Tree.MyTree[root].Children = make(map[string]bool)
+  fmt.Println("in start server",tnt.Tree)
 
   // RPC set-up borrowed from Lab
   rpcs := rpc.NewServer()

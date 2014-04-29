@@ -4,24 +4,11 @@ import (
     "code.google.com/p/go.exp/inotify"
     "log"
     "fmt"
-    "time"
-    "path/filepath"
+    //"time"
+    //"path/filepath"
     "os"
+    "encoding/gob"
 )
-
-type FSnode struct {
-    Name string
-    Size int64
-    FD uintptr
-    ModTime time.Time
-    IsDir bool
-    Depth int
-    Children map[string]bool
-}
-
-type FStree struct {
-    Tree map[string]*FSnode
-}
 
 func file_watcher() {
   
@@ -49,17 +36,17 @@ func file_watcher() {
 }
 
 
+/*
+func spaces(depth int) {func SetupServers(tag string) ([]*TnTServer, func()) {
 
-func spaces(depth int) {
     for i:=0; i<depth; i++ {
         fmt.Printf("|")
     }
     fmt.Printf("|- ")
-}
+}*/
 
 //Creates FST_Watch with data on every file in the seached folder which gets used by FST_parse_watch below
-func FST_create(dirname string, depth int, fst *FStree) {
-    
+func (tnt *TnTServer) FST_create(dirname string, depth int) {
     d, err := os.Open(dirname)
     if err != nil {
         fmt.Println(err)
@@ -71,79 +58,102 @@ func FST_create(dirname string, depth int, fst *FStree) {
         fmt.Println(err)
         os.Exit(1)
     }
-
     for _, fi := range fi {
-        spaces(depth)
-        if fi.Mode().IsRegular() {
-            child_name := dirname+fi.Name()
-            //fmt.Println(fi.Name(), "size:", fi.Size(), "mod:", fi.ModTime())
-            fmt.Println(fi)
-
-            //fsn := FSnode{Name:fi.Name(), Size:fi.Size(), ModTime:fi.ModTime(), IsDir:fi.IsDir()}
-            fst.Tree[child_name] = new(FSnode)
-            fst.Tree[child_name].Name = fi.Name()
-            fst.Tree[child_name].Size = fi.Size()
-            fst.Tree[child_name].ModTime = fi.ModTime()
-            fst.Tree[child_name].IsDir = fi.IsDir()
-            fst.Tree[child_name].Depth = depth+1
-            fst.Tree[dirname].Children[child_name] = true
-        } else if fi.IsDir() {
-            child_name := dirname+fi.Name()+string(filepath.Separator)
-            fmt.Println(child_name, ":", fi.ModTime())
-
-            //fsn := FSnode{Name:fi.Name(), Size:fi.Size(), ModTime:fi.ModTime(), IsDir:fi.IsDir()}
-            fst.Tree[child_name] = new(FSnode)
-            fst.Tree[child_name].Name = fi.Name()
-            fst.Tree[child_name].Size = fi.Size()
-            fst.Tree[child_name].ModTime = fi.ModTime()
-            fst.Tree[child_name].IsDir = fi.IsDir()
-            fst.Tree[child_name].Depth = depth+1
-            fst.Tree[child_name].Children = make(map[string]bool)
-            fst.Tree[dirname].Children[child_name] = true
-            FST_create(child_name, depth+1, fst)
+        //spaces(depth)
+        child_name := dirname+fi.Name()
+        fmt.Println(child_name)
+        tnt.Tree.MyTree[child_name] = new(FSnode)
+        tnt.Tree.MyTree[child_name].Name = fi.Name()
+        tnt.Tree.MyTree[child_name].Size = fi.Size()
+        tnt.Tree.MyTree[child_name].ModTime = fi.ModTime()
+        tnt.Tree.MyTree[child_name].IsDir = fi.IsDir()
+        tnt.Tree.MyTree[child_name].Depth = depth+1
+        tnt.Tree.MyTree[child_name].VerVect = 0
+        tnt.Tree.MyTree[child_name].SyncVect = 0
+        tnt.Tree.MyTree[dirname].Children[child_name] = true
+        if fi.IsDir() {
+            tnt.Tree.MyTree[child_name].Children = make(map[string]bool)
+            tnt.FST_create(child_name, depth+1)
         }
+
     }
 }
 
-func FST_parse_watch(fst *FStree, dirname string, watcher *inotify.Watcher) {
-    fmt.Println("in fst_parse_watch")
-    err := watcher.Watch(dirname)
+func WritetoDisk(dirname string, tnt *TnTServer) error {
+    f, err := os.OpenFile(dirname+"FST_watch", os.O_WRONLY | os.O_CREATE, 0777)
     if err != nil {
-        log.Fatal(err)
+        log.Println("Error opening file:", err)
     }
-    for child, _ := range fst.Tree[dirname].Children {
-        //fmt.Println("start of loop", fst.Tree[child])
-        spaces(fst.Tree[dirname].Depth)
-        if fst.Tree[child].IsDir {
-            fmt.Println(child, ":", fst.Tree[child].ModTime)
-            FST_parse_watch(fst, child, watcher)
-        } else {
-            fmt.Println(fst.Tree[child].Name, "size:", fst.Tree[child].Size, "mod:", fst.Tree[child].ModTime)
+
+    encoder := gob.NewEncoder(f)
+    encoder.Encode(tnt)
+    f.Close()
+    fmt.Println("FST_watch dumped!")
+    return nil
+}
+
+func ReadFromDisk(dirname string, tnt *TnTServer) FStree {
+    //Test the watch here
+    fmt.Println(dirname)
+    f, err := os.Open(dirname+"FST_watch")
+    if err != nil {
+        log.Println("Error opening file:", err)
+    }
+    var fst1 FStree
+    decoder := gob.NewDecoder(f)
+    decoder.Decode(&fst1)
+
+    f.Close()
+    return fst1
+}
+
+//This function sets watch on all files in the directory
+func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
+    fmt.Println("in fst_set_watch")
+
+    for child, _ := range tnt.Tree.MyTree[dirname].Children {
+        fmt.Println("start of loop", child)
+
+        err := watcher.AddWatch(child, IN_MODIFY | IN_CREATE | IN_DELETE)
+        if err != nil {
+            log.Fatal(err)
         }
+
+        if tnt.Tree.MyTree[child].IsDir {
+            tnt.FST_set_watch(child, watcher)
+        } 
     }
 }
 
-func FST_watch_files(fst *FStree, dirname string, watcher *inotify.Watcher){
+//This function watches all of the files in the background and takes action accordingly
+func (tnt *TnTServer) FST_watch_files(dirname string, watcher *inotify.Watcher){
     fmt.Println("in FST_watch_files")
-    fmt.Println(fst.Tree[dirname])
+    //fmt.Println(tnt.Tree.MyTree[dirname])
     for {
-      select {
-      case ev := <-watcher.Event:
-          //log.Println("event:", ev)
-          for child,_ := range fst.Tree[dirname].Children{
-            //fmt.Println(dirname+"/"+fst.Tree[child].Name, ev.Name)
-            if(dirname+"/"+fst.Tree[child].Name == ev.Name){
-                d,_ := os.Open(ev.Name)
-                fi, _ := d.Stat()
-                fmt.Println(fi.ModTime(),fst.Tree[child].ModTime)
-                //d.Close()
-                //fmt.Println(fst.Tree[child], fst.Tree[child].fd)
-            }
-          }
-          
-      case err := <-watcher.Error:
-          log.Println("error:", err)
-      }
+        select {
+            case ev := <-watcher.Event:
+                //fmt.Println(ev)
+                file_node := tnt.Tree.MyTree[ev.Name]
+                
+                fmt.Println("ev: ", ev, "file node: ", file_node)
+            case err := <-watcher.Error:
+                log.Println("error:", err)
+        }
     } 
 }
 
+//This function is used to recursively parse the tree to find the file that set off an event in FST_watch_files
+//And return its node in the tree
+func (tnt *TnTServer) FST_parse_watch(dirname string, ev *inotify.Event) *FSnode {
+    //fmt.Println("in fst_parse_watch")
+
+    for child, _ := range tnt.Tree.MyTree[dirname].Children {
+        if tnt.Tree.MyTree[child].IsDir {
+            tnt.FST_parse_watch(child, ev)
+        } else if(ev.Name == child){
+            //fmt.Println("i found it", tnt.Tree.MyTree[child])
+            return tnt.Tree.MyTree[child]
+        }
+    }
+    return nil
+}
