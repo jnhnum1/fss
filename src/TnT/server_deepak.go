@@ -100,6 +100,7 @@ func compareVector(hA map[int]int, hB map[int]int) int {
 
 func (tnt *TnTServer)PropagateUp(VersionVector map[int]int, SyncVector map[int]int, path string){
 	//path:path of the parent
+	//Propagate the changes in a version vector upwards
 	tnt.mu.Lock()
 	for k,v:=range tnt.Tree.MyTree[path].VerVect{
 		if(v<VersionVector[k]){
@@ -116,7 +117,9 @@ func (tnt *TnTServer)PropagateUp(VersionVector map[int]int, SyncVector map[int]i
 }
 
 func (tnt *TnTServer)SyncNow(srv int,path string,onlySync bool){
-
+	//Sync recursively
+	
+	//Case of the leaf node
 	if(len(tnt.Tree.MyTree[path].Children==0)){
 		//Call single file synchronization here
 		//Also handle the special case of a directory
@@ -124,6 +127,7 @@ func (tnt *TnTServer)SyncNow(srv int,path string,onlySync bool){
 		//Check for onlySync
 		return
 	}
+	//Case of the non-leaf node
 	args:=&GetVersionArgs{Path:path}
 	var reply GetVersionReply
 	for{
