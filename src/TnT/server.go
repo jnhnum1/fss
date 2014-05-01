@@ -27,58 +27,11 @@ type TnTServer struct {
   servers []string
   root string
 
-  fname string //the sole file to be in sync
+  fname string // the name of the sole file to be in sync
+  exists bool // true if a local copy of file exists
   lastModTime time.Time
   modHist map[int]int
   syncHist map[int]int
-}
-
-func compareVersionVects(hA map[int]int, hB map[int]int) int {
-  /*
-  (1) EQUAL - if all sequence numbers match
-  (2) LESSER - if all sequence numbers in hA are <= that in hB (at least one is strictly smaller)
-  (3) GREATER - if all sequence numbers in hA are >= that in hB (at least one is strictly greater)
-  (4) INCOMPARABLE - otherwise
-  */
-  is_equal := true
-  is_lesser := true
-  is_greater := true
-
-  for k, _ := range hA {
-    if hA[k] < hB[k] {
-      is_equal = false
-      is_greater = false
-    } else if hA[k] > hB[k] {
-      is_equal = false
-      is_lesser = false
-    }
-  }
-
-  if is_equal {
-      return EQUAL
-  } else if is_lesser {
-      return LESSER
-  } else if is_greater {
-      return GREATER
-  }
-
-  return INCOMPARABLE
-}
-
-func setVersionVect(hA map[int]int, hB map[int]int) {
-  /* For all k, sets hA[k] = hB[k] */
-  for k, v := range hB {
-    hA[k] = v
-  }
-}
-
-func setMaxVersionVect(hA map[int]int, hB map[int]int) {
-  /* For all k, sets hA[k] = max(hA[k], hB[k]) */
-  for k, v := range hB {
-    if hA[k] < v {
-        hA[k] = v
-    }
-  }
 }
 
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
@@ -106,25 +59,39 @@ func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
   return nil
 }
 
-func (tnt *TnTServer) GetHistory(args *GetHistoryArgs, reply *GetHistoryReply) error {
-  /*
-  (1) Check for updates on local version of file: update modHist, syncHist if required
-  (2) Send over modHist, syncHist through 'reply'
-  */
 
+func (tnt *TnTServer) UpdateLocalState() {
+  /*
+    Check for updates on local version of file: update modHist, syncHist if required
+    UpdateLocalState() is called at the beginning of GetHistory() RPC and in SyncNow()
+  */
   fi, err := os.Lstat(tnt.root + tnt.fname)
   if err != nil {
-      log.Println(tnt.me, ": File does not exist:", err)
+      if tnt.exists {
+          tnt.exists = false
+          tnt.lastModTime = time.Now()
+          tnt.modHist[tnt.me] = tnt.syncHist[tnt.me] + 1
+          tnt.syncHist[tnt.me] += 1
+      }
   } else {
       if tnt.lastModTime.Before(fi.ModTime()) {
+          tnt.exists = true
           tnt.lastModTime = fi.ModTime()
           tnt.modHist[tnt.me] = tnt.syncHist[tnt.me] + 1
           tnt.syncHist[tnt.me] += 1
       }
   }
+}
 
-  reply.ModHist = tnt.modHist
-  reply.SyncHist = tnt.syncHist
+func (tnt *TnTServer) GetHistory(args *GetHistoryArgs, reply *GetHistoryReply) error {
+  /*
+  (1) Check for updates on local version of file: update modHist, syncHist if required
+  (2) Send over exists, modHist, syncHist through 'reply'
+  */
+
+  tnt.UpdateLocalState()
+
+  reply.Exists, reply.ModHist, reply.SyncHist = tnt.exists, tnt.modHist, tnt.syncHist
 
   return nil
 }
@@ -141,11 +108,11 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
   ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
   if ok {
       if reply.Err != nil {
-          log.Println(tnt.me, ": Error opening file:", reply.Err)
+          log.Println("CopyFileFromPeer:", tnt.me, ": Error opening file:", reply.Err)
       } else {
           err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
           if err != nil {
-              log.Println(tnt.me, ": Error writing file:", err)
+              log.Println("CopyFileFromPeer:", tnt.me, ": Error writing file:", err)
           }
       }
   } else {
@@ -163,37 +130,31 @@ func (tnt *TnTServer) SyncNow(srv int) {
       (a) do nothing
       (b) fetch the file
       (c) conflict
-  (4) If there is conflict, then ask the user for action.
-      (a) If user asks to fetch, then fetch.
-      (b) In either case set syncHist appropriately
+  (4) If there is conflict, 
+      (a) Check if it's a delete-delete conflict. If yes, then update syncHist and ignore
+      (b) If it is some other conflict, then ask the user for action.
+      (c) Do appropriate action as specified by user.
+      (d) In any case set syncHist appropriately
   */
 
   fmt.Println("Machine", tnt.me, "syncing from machine", srv)
 
-  fi, err := os.Lstat(tnt.root + tnt.fname)
-  if err != nil {
-      log.Println(tnt.me, ": File does not exist:", err)
-  } else {
-      if tnt.lastModTime.Before(fi.ModTime()) {
-          tnt.lastModTime = fi.ModTime()
-          tnt.modHist[tnt.me] = tnt.syncHist[tnt.me] + 1
-          tnt.syncHist[tnt.me] += 1
-      }
-  }
+  tnt.UpdateLocalState()
 
   args := &GetHistoryArgs{}
   var reply GetHistoryReply
-
   ok := call(tnt.servers[srv], "TnTServer.GetHistory", args, &reply)
 
   if ok {
 
       fmt.Println("Printing Histories:")
       fmt.Println(tnt.me, "Mine :")
+      fmt.Println("  exists  :", tnt.exists)
       fmt.Println("  modHist :", tnt.modHist)
       fmt.Println("  syncHist:", tnt.syncHist)
       fmt.Println("  lastModTime:", tnt.lastModTime)
       fmt.Println(srv, "Peer :")
+      fmt.Println("  exists  :", reply.Exists)
       fmt.Println("  modHist :", reply.ModHist)
       fmt.Println("  syncHist:", reply.SyncHist)
 
@@ -202,57 +163,117 @@ func (tnt *TnTServer) SyncNow(srv int) {
       mB_vs_sA := compareVersionVects(tnt.modHist, reply.SyncHist)
 
       if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
+
           // Do nothing, but update sync history (Can this do anything wrong?!)
           fmt.Println(tnt.me, "has all updates already from", srv)
           setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+
       } else if  mB_vs_sA == LESSER || mB_vs_sA == EQUAL {
-          // Fetch file, set tnt.lastModTime and update modHist and syncHist :
-          fmt.Println(tnt.me, "is fetching file from", srv)
-          // get file
-          tnt.CopyFileFromPeer(srv, tnt.fname, tnt.fname)
-          // set tnt.lastModTime
-          fi, err := os.Lstat(tnt.root + tnt.fname)
-          if err != nil {
-              log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
-          } else {
-              tnt.lastModTime = fi.ModTime()
-          }
-          // set modHist, syncHist
-          setVersionVect(tnt.modHist, reply.ModHist)
-          setMaxVersionVect(tnt.syncHist, reply.SyncHist)
-      } else {
-          // report conflict : ask for resolution
-          fmt.Println(tnt.me, "conflicts with", srv)
 
-          fmt.Printf("Conflict on %d syncing from %d\n", tnt.me, srv)
-          choice := -1
-          for choice != tnt.me && choice != srv {
-              fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
-              fmt.Scanf("%d", &choice)
-          }
-
-          if choice == tnt.me {
-              // If my version is chosen, simply update syncHist
-              setMaxVersionVect(tnt.syncHist, reply.SyncHist)
-          } else {
-              // Fetch file, set tnt.lastModTime and update modHist and syncHist :
-
-              // get file
+          /*
+          (1) If reply.Exists == true  : fetch file, set tnt.lastModTime
+              If reply.Exists == false : delete local copy, set tnt.lastModTime = time.Now()
+          (2) Update modHist and syncHist
+          */
+          if reply.Exists {
+              fmt.Println(tnt.me, "is fetching file from", srv)
+              // get file : it should exists on 'srv'
               tnt.CopyFileFromPeer(srv, tnt.fname, tnt.fname)
               // set tnt.lastModTime
               fi, err := os.Lstat(tnt.root + tnt.fname)
               if err != nil {
                   log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
               } else {
+                  tnt.exists = true
                   tnt.lastModTime = fi.ModTime()
               }
-              // set modHist, syncHist
-              setVersionVect(tnt.modHist, reply.ModHist)
+          } else /* reply.Exists == false */ {
+              fmt.Println(tnt.me, "is deleting local copy due to", srv)
+              // delete local copy, set tnt.lastModTime = time.Now()
+              os.Remove(tnt.root + tnt.fname)
+              tnt.lastModTime = time.Now()
+              tnt.exists = false
+          }
+
+          // set modHist, syncHist
+          setVersionVect(tnt.modHist, reply.ModHist)
+          setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+
+      } else {
+          /*
+          Four possible cases:
+          (1) delete-delete conflict : just ignore
+          (2) (a) delete-update conflict
+              (b) update-delete conflict
+          (3) update-update conflict
+          */
+          
+          if reply.Exists == false && tnt.exists == false {
+              // Delete-Delete conflict : update syncHist and ignore
+              fmt.Println(tnt.me, "Delete-Delete conflict:", srv, "and", tnt.me, "deleted file independently : not really a conflict")
               setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+
+          } else if reply.Exists == false && tnt.exists == true {
+
+              // Ask user to choose:
+              fmt.Println("Delete-Update conflict:", srv, "has deleted, but", tnt.me, "has updated")
+              choice := -1
+              for choice != tnt.me && choice != srv {
+                  fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
+                  fmt.Scanf("%d", &choice)
+              }
+
+              if choice == tnt.me {
+                  // If my version is chosen, simply update syncHist
+                  setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+              } else {
+                  // Delete local copy, set tnt.exists, tnt.lastModTime and update modHist and syncHist :
+                  os.Remove(tnt.root + tnt.fname)
+                  tnt.lastModTime = time.Now()
+                  tnt.exists = false
+                  setVersionVect(tnt.modHist, reply.ModHist)
+                  setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+              }
+
+          } else if reply.Exists == true {
+
+              /* Update-Delete or Update-Update conflict */
+
+              if tnt.exists == false {
+                  fmt.Println("Update-Delete conflict:", srv, "has update, but", tnt.me, "has deleted")
+              } else {
+                  fmt.Println("Update-Update conflict:", srv, "and", tnt.me, "have updated independently")
+              }
+              choice := -1
+              for choice != tnt.me && choice != srv {
+                  fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
+                  fmt.Scanf("%d", &choice)
+              }
+
+              if choice == tnt.me {
+                  // If my version is chosen, simply update syncHist
+                  setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+              } else {
+                  // Fetch file, set tnt.lastModTime and update tnt.exists, modHist and syncHist :
+
+                  // get file
+                  tnt.CopyFileFromPeer(srv, tnt.fname, tnt.fname)
+                  // set tnt.lastModTime
+                  fi, err := os.Lstat(tnt.root + tnt.fname)
+                  if err != nil {
+                      log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
+                  } else {
+                      tnt.lastModTime = fi.ModTime()
+                  }
+                  // set exists, modHist, syncHist
+                  tnt.exists = true
+                  setVersionVect(tnt.modHist, reply.ModHist)
+                  setMaxVersionVect(tnt.syncHist, reply.SyncHist)
+              }
           }
       }
   } else {
-      log.Println(tnt.me, ": GetHistory RPC failed")
+      log.Println(tnt.me, ": GetHistory RPC failed - try later")
   }
 }
 
@@ -270,18 +291,22 @@ func StartServer(servers []string, me int, root string, fname string) *TnTServer
   tnt.root = root
   tnt.fname = fname
 
-  fi, err := os.Lstat(root+fname)
-  if err == nil {
-      tnt.lastModTime = fi.ModTime()
-  } else {
-      tnt.lastModTime = time.Now()
-  }
-
   tnt.modHist = make(map[int]int)
   tnt.syncHist = make(map[int]int)
   for i:=0; i<len(servers); i++ {
       tnt.modHist[i] = 0
       tnt.syncHist[i] = 0
+  }
+
+  fi, err := os.Lstat(root+fname)
+  if err == nil {
+      tnt.exists = true
+      tnt.modHist[tnt.me] = 1
+      tnt.syncHist[tnt.me] = 1
+      tnt.lastModTime = fi.ModTime()
+  } else {
+      tnt.exists = false
+      tnt.lastModTime = time.Now()
   }
 
   // RPC set-up borrowed from Lab
