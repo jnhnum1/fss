@@ -66,9 +66,18 @@ func compareVersionVects(hA map[int]int, hB map[int]int) int {
 }
 
 func setVersionVect(hA map[int]int, hB map[int]int) {
-  /* Sets hA = hB */
+  /* For all k, sets hA[k] = hB[k] */
   for k, v := range hB {
     hA[k] = v
+  }
+}
+
+func setMaxVersionVect(hA map[int]int, hB map[int]int) {
+  /* For all k, sets hA[k] = max(hA[k], hB[k]) */
+  for k, v := range hB {
+    if hA[k] < v {
+        hA[k] = v
+    }
   }
 }
 
@@ -193,14 +202,9 @@ func (tnt *TnTServer) SyncNow(srv int) {
       mB_vs_sA := compareVersionVects(tnt.modHist, reply.SyncHist)
 
       if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
-          // do nothing
+          // Do nothing, but update sync history (Can this do anything wrong?!)
           fmt.Println(tnt.me, "has all updates already from", srv)
-          // Update sync history. Can this do anything wrong?!
-          for k, v := range reply.SyncHist {
-              if tnt.syncHist[k] < v {
-                  tnt.syncHist[k] = v
-              }
-          }
+          setMaxVersionVect(tnt.syncHist, reply.SyncHist)
       } else if  mB_vs_sA == LESSER || mB_vs_sA == EQUAL {
           // Fetch file, set tnt.lastModTime and update modHist and syncHist :
           fmt.Println(tnt.me, "is fetching file from", srv)
@@ -215,11 +219,7 @@ func (tnt *TnTServer) SyncNow(srv int) {
           }
           // set modHist, syncHist
           setVersionVect(tnt.modHist, reply.ModHist)
-          for k, v := range reply.SyncHist {
-              if tnt.syncHist[k] < v {
-                  tnt.syncHist[k] = v
-              }
-          }
+          setMaxVersionVect(tnt.syncHist, reply.SyncHist)
       } else {
           // report conflict : ask for resolution
           fmt.Println(tnt.me, "conflicts with", srv)
@@ -233,11 +233,7 @@ func (tnt *TnTServer) SyncNow(srv int) {
 
           if choice == tnt.me {
               // If my version is chosen, simply update syncHist
-              for k, v := range reply.SyncHist {
-                  if tnt.syncHist[k] < v {
-                      tnt.syncHist[k] = v
-                  }
-              }
+              setMaxVersionVect(tnt.syncHist, reply.SyncHist)
           } else {
               // Fetch file, set tnt.lastModTime and update modHist and syncHist :
 
@@ -252,11 +248,7 @@ func (tnt *TnTServer) SyncNow(srv int) {
               }
               // set modHist, syncHist
               setVersionVect(tnt.modHist, reply.ModHist)
-              for k, v := range reply.SyncHist {
-                  if tnt.syncHist[k] < v {
-                      tnt.syncHist[k] = v
-                  }
-              }
+              setMaxVersionVect(tnt.syncHist, reply.SyncHist)
           }
       }
   } else {
