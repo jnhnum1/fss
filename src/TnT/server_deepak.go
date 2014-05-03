@@ -51,6 +51,7 @@ type FSnode struct {
     VerVect map[int]int		//ask Zach to modify this
     SyncVect map[int]int	//ask Zach to modify this
     parent string			//ask Zach to add this
+    exists bool				
 }
 
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error{
