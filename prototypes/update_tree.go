@@ -210,13 +210,14 @@ func (tnt *TnTServer) UpdateTree(dir string) {
     }
 }
 
-func (tnt *TnTServer) ParseTree(dirname string, depth int) {
+func (tnt *TnTServer) ParseTree(path string, depth int) {
     fst := tnt.Tree
 
-    for child, _ := range fst.Tree[dirname].Children {
-        spaces(depth)
-        fmt.Println(fst.Tree[child].Name, ":", fst.Tree[child].LastModTime, fst.Tree[child].Exists, fst.Tree[child].VerVect, fst.Tree[child].SyncVect)
-        if fst.Tree[child].IsDir {
+    spaces(depth)
+    fmt.Println(fst.Tree[path].Name, ":", fst.Tree[path].LastModTime, fst.Tree[path].Exists, fst.Tree[path].VerVect, fst.Tree[path].SyncVect)
+
+    if fst.Tree[path].IsDir {
+        for child, _ := range fst.Tree[path].Children {
             tnt.ParseTree(child, depth+1)
         }
     }
@@ -224,7 +225,8 @@ func (tnt *TnTServer) ParseTree(dirname string, depth int) {
 
 func main() {
 
-    root := "." + string(filepath.Separator) + "watch_folder" + string(filepath.Separator)
+    root_folder := "watch_folder"
+    root := "." + string(filepath.Separator) + root_folder + string(filepath.Separator)
     dump := "FST_watch_new"
 
     tnt := new(TnTServer)
@@ -239,9 +241,22 @@ func main() {
         fst := new(FStree)
         fst.Tree = make(map[string]*FSnode)
         fst.Tree[root] = new(FSnode)
-        fst.Tree[root].Name = root
+        fst.Tree[root].Name = root_folder
+        fst.Tree[root].IsDir = true
         fst.Tree[root].Children = make(map[string]bool)
         fst.Tree[root].LastModTime = time.Now()
+
+        fst.Tree[root].VerVect = make(map[int]int)
+        fst.Tree[root].SyncVect = make(map[int]int)
+        fst.Tree[root].Parent = root
+        fst.Tree[root].Exists = true
+
+        // Initialize VecVect, SyncVect
+        for i:=0; i<len(tnt.servers); i++ {
+            fst.Tree[root].VerVect[i] = 0
+            fst.Tree[root].SyncVect[i] = 0
+        }
+
         tnt.Tree = fst
     } else {
         fmt.Println(dump, "found! Fetching tree...")
