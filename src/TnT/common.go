@@ -6,9 +6,21 @@ import (
   "os"
 )
 
-type Version struct {
-  Seq int
-  //Timestamp time.Time
+const (
+  EQUAL = 0
+  LESSER = 1
+  GREATER = 2
+  INCOMPARABLE = 3
+)
+
+type GetVersionArgs struct{
+	Path string
+}
+
+type GetVersionReply struct{
+	VerVect map[int]int
+	SyncVect map[int]int
+	Children map[string]bool
 }
 
 type GetFileArgs struct {
@@ -21,15 +33,6 @@ type GetFileReply struct {
   Err error
 }
 
-type GetHistoryArgs struct {
-  Me int
-}
-
-type GetHistoryReply struct {
-  Exists bool
-  ModHist map[int]int
-  SyncHist map[int]int
-}
 
 func compareVersionVects(hA map[int]int, hB map[int]int) int {
   /*
