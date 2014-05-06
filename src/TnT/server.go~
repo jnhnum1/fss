@@ -20,7 +20,7 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
     fsn := tnt.Tree.MyTree[args.Path]
     reply.IsDir=make(map[string]bool)
 	for k,v:=range fsn.Children{
-		reply.IsDir[k]=tnt.Tree.MyTree[k].IsDir
+		reply.IsDir[k]=fsn[k].IsDir
 	}
     // No need to copy stuff explicitly. Go RPC handles all this!
     // Pritish: added Exists bool to reply. This is needed for SyncSingle, isn't it?

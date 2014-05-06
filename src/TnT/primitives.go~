@@ -103,7 +103,6 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
 	  } else {
     	  log.Println(tnt.me, ": GetDir RPC failed")
 	  }
-	  return reply.Err
   	
   }else{
 	args := &GetFileArgs{FilePath:path}

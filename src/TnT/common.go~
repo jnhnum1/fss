@@ -35,14 +35,6 @@ type GetFileReply struct {
   Err error
 }
 
-type GetDirArgs struct{
-  Path string
-}
-
-type GetDirReply struct{
-  Perm os.FileMode
-  Err error
-}
 
 func compareVersionVects(hA map[int]int64, hB map[int]int64) int {
   /*

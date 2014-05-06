@@ -71,7 +71,7 @@ func setup(tag string, nservers int) ([]*TnT.TnTServer, func()) {
 
   for i:=0; i<nservers; i++ {
     //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
-  tnts[i]=TnT.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+  tnts[i]=TnT.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", common_root+strconv.Itoa(i)+"/WatchLog")
   }
 
   clean := func() { (cleanup(tnts)) }
