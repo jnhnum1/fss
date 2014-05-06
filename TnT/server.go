@@ -29,12 +29,15 @@ type FStree struct {
 type FSnode struct {
     Name string
     Size int64
-    ModTime time.Time
+    LastModTime time.Time
     IsDir bool
     Depth int
+    LogicalTime int
     Children map[string]bool
-    VerVect int
-    SyncVect int
+    VerVect map[int] int
+    SyncVect map[int] int
+    Parent string
+    Exists bool
 }
 
 
@@ -129,6 +132,8 @@ func StartServer(servers []string, me int, root string) *TnTServer {
   tnt.Tree.MyTree[root].Name = root
   tnt.Tree.MyTree[root].Depth = 0
   tnt.Tree.MyTree[root].Children = make(map[string]bool)
+  tnt.Tree.MyTree[root].VerVect = make(map[int]int)
+  tnt.Tree.MyTree[root].SyncVect = make(map[int]int)
   fmt.Println("in start server",tnt.Tree)
 
   // RPC set-up borrowed from Lab
