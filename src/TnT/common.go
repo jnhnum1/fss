@@ -14,13 +14,14 @@ const (
 )
 
 type GetVersionArgs struct{
-	Path string
+  Path string
 }
 
 type GetVersionReply struct{
-	VerVect map[int]int
-	SyncVect map[int]int
-	Children map[string]bool
+  Exists bool
+  VerVect map[int]int64
+  SyncVect map[int]int64
+  Children map[string]bool
 }
 
 type GetFileArgs struct {
@@ -34,7 +35,7 @@ type GetFileReply struct {
 }
 
 
-func compareVersionVects(hA map[int]int, hB map[int]int) int {
+func compareVersionVects(hA map[int]int64, hB map[int]int64) int {
   /*
   (1) EQUAL - if all sequence numbers match
   (2) LESSER - if all sequence numbers in hA are <= that in hB (at least one is strictly smaller)
@@ -66,14 +67,14 @@ func compareVersionVects(hA map[int]int, hB map[int]int) int {
   return INCOMPARABLE
 }
 
-func setVersionVect(hA map[int]int, hB map[int]int) {
+func setVersionVect(hA map[int]int64, hB map[int]int64) {
   /* For all k, sets hA[k] = hB[k] */
   for k, v := range hB {
     hA[k] = v
   }
 }
 
-func setMaxVersionVect(hA map[int]int, hB map[int]int) {
+func setMaxVersionVect(hA map[int]int64, hB map[int]int64) {
   /* For all k, sets hA[k] = max(hA[k], hB[k]) */
   for k, v := range hB {
     if hA[k] < v {

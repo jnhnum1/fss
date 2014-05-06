@@ -17,14 +17,15 @@ type FSnode struct {
     IsDir bool
     Children map[string]bool
     LastModTime time.Time
-    VerVect map[int]int		//ask Zach to modify this
-    SyncVect map[int]int	//ask Zach to modify this
+    VerVect map[int]int64	//ask Zach to modify this
+    SyncVect map[int]int64	//ask Zach to modify this
     Parent string		//ask Zach to add this
     Exists bool			//ask Zach to add this
 }
 
 type FStree struct {
-    Tree map[string] *FSnode
+    LogicalTime int64
+    MyTree map[string] *FSnode
 }
 
 type TnTServer struct {
@@ -55,31 +56,59 @@ Non-trivial remarks:
     So don't expect the truth values stored in the map to always be "true".
 */
 
-func (tnt *TnTServer) DeleteTree(dir string) {
+func (tnt *TnTServer) UpdateTreeWrapper(dir string) {
+    tnt.Tree.LogicalTime += 1
+    tnt.UpdateTree(dir)
+    tnt.SyncMeDown(dir)
+}
 
-    fst := tnt.Tree
+func (tnt *TnTServer) SyncMeDown(path string) {
+
+    fst := tnt.Tree.MyTree
+
+    if fst[path].IsDir {
+        for child, _ := range fst[path].Children {
+            tnt.SyncMeDown(child)
+        }
+    }
+    fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+}
+
+
+func (tnt *TnTServer) DeleteTree(dir string) {
+    /* Remarks:
+    (1) "Deletes" entire sub-tree under 'dir'
+    (2) Should be used only when fst[dir].Exists = true
+    */
+
+    fst := tnt.Tree.MyTree
 
     // Delete all children; recursively delete if child is a directory
-    for child, _ := range fst.Tree[dir].Children {
-        if fst.Tree[child].IsDir {
-            tnt.DeleteTree(child)
-        } else {
-            fst.Tree[child].Exists = false
-            fst.Tree[child].LastModTime = time.Now()
-            fst.Tree[child].VerVect[tnt.me] = fst.Tree[child].SyncVect[tnt.me] + 1
-            fst.Tree[child].SyncVect[tnt.me] += 1
+    for child, exists := range fst[dir].Children {
+        if exists {
+            if fst[child].IsDir {
+                tnt.DeleteTree(child)
+            } else {
+                fst[child].Exists = false
+                fst[child].LastModTime = time.Now()
+                fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                //fst[child].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+            }
+            fst[dir].Children[child] = false
         }
     }
     // Set my own state
-    fst.Tree[dir].Exists = false
-    fst.Tree[dir].LastModTime = time.Now()  // note: my LastModTime is higher than any of my children
-    fst.Tree[dir].VerVect[tnt.me] = fst.Tree[dir].SyncVect[tnt.me] + 1
-    fst.Tree[dir].SyncVect[tnt.me] += 1
+    fst[dir].Exists = false
+    fst[dir].LastModTime = time.Now()  // note: my LastModTime is higher than any of my children
+    fst[dir].VerVect[tnt.me] = tnt.Tree.LogicalTime
+    //fst[dir].SyncVect[tnt.me] = tnt.Tree.LogicalTime
 }
 
 func (tnt *TnTServer) UpdateTree(dir string) {
 
-    fst := tnt.Tree
+    //'dir' must be a directory; if it is not then program will crash!!
+
+    fst := tnt.Tree.MyTree
 
     // (1) explore the file system, and make appropriate changes in FStree
     // (2) "delete" nodes in FStree which are not in the file system
@@ -88,8 +117,10 @@ func (tnt *TnTServer) UpdateTree(dir string) {
     defer d.Close()
 
     if err != nil {
-        tnt.DeleteTree(dir)        
+        tnt.DeleteTree(dir)
         return
+    } else {
+        fst[dir].Exists = true
     }
 
     fi, err := d.Readdir(-1)
@@ -100,78 +131,80 @@ func (tnt *TnTServer) UpdateTree(dir string) {
 
     // Book-keeping : if fst.Tree[dir].Children[child] remains false in the end,
     // then it means child does not exist in file system
-    for child, _ := range fst.Tree[dir].Children {
-        fst.Tree[dir].Children[child] = false
+    for child, _ := range fst[dir].Children {
+        fst[dir].Children[child] = false
     }
 
     for _, fi := range fi {
         if fi.Mode().IsRegular() {
             // Check if file is already present in FSTree
             child := dir + fi.Name()
-            if fst.Tree[child] != nil {
+            if fst[child] != nil {
                 // File is present in FStree; so "update", if required
-                fst.Tree[dir].Children[child] = true // for book-keeping: child really exists in file-system
-                if fst.Tree[child].LastModTime.Before(fi.ModTime()) {
-                    fst.Tree[child].Exists = true
-                    fst.Tree[child].LastModTime = fi.ModTime()
-                    fst.Tree[child].VerVect[tnt.me] = fst.Tree[child].SyncVect[tnt.me] + 1
-                    fst.Tree[child].SyncVect[tnt.me] += 1
+                fst[dir].Children[child] = true // for book-keeping: child really exists in file-system
+                fst[child].Exists = true
+                if fst[child].LastModTime.Before(fi.ModTime()) {
+                    fst[child].LastModTime = fi.ModTime()
+                    fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                    // fst[child].SyncVect[tnt.me] is edited later in SyncMeDown(...) irrespective of whether the file was edited or not
                 }
             } else {
                 // File is new; so add a new entry in FStree
-                fst.Tree[child] = new(FSnode)
-                fst.Tree[child].Name = fi.Name()
-                fst.Tree[child].Size = fi.Size()
-                fst.Tree[child].IsDir = fi.IsDir()
-                fst.Tree[child].LastModTime = fi.ModTime()
-                fst.Tree[child].VerVect = make(map[int]int)
-                fst.Tree[child].SyncVect = make(map[int]int)
-                fst.Tree[child].Parent = dir
-                fst.Tree[child].Exists = true
+                fst[child] = new(FSnode)
+                fst[child].Name = fi.Name()
+                fst[child].Size = fi.Size()
+                fst[child].IsDir = fi.IsDir()
+                fst[child].LastModTime = fi.ModTime()
+                fst[child].VerVect = make(map[int]int64)
+                fst[child].SyncVect = make(map[int]int64)
+                fst[child].Parent = dir
+                fst[child].Exists = true
 
                 // Initialize VecVect, SyncVect
                 for i:=0; i<len(tnt.servers); i++ {
-                    fst.Tree[child].VerVect[i] = 0
-                    fst.Tree[child].SyncVect[i] = 0
+                    fst[child].VerVect[i] = 0
+                    fst[child].SyncVect[i] = 0
                 }
-                fst.Tree[child].VerVect[tnt.me] = 1
-                fst.Tree[child].SyncVect[tnt.me] = 1
+
+                fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                // fst[child].SyncVect[tnt.me] is edited later in SyncMeDown(...) irrespective of whether the file was edited or not
 
                 // Make an entry in parent directory
-                fst.Tree[dir].Children[child] = true // also book-keeping: child really exists in file-system
+                fst[dir].Children[child] = true // also book-keeping: child really exists in file-system
             }
-
         } else if fi.IsDir() {
             child := dir + fi.Name() + string(filepath.Separator)
 
-            if fst.Tree[child] != nil {
+            if fst[child] != nil {
                 // Directory is present in FStree; so "update" recursively
-                fst.Tree[dir].Children[child] = true
+                fst[dir].Children[child] = true
                 tnt.UpdateTree(child)
+                // fst[child].SyncVect[tnt.me] is edited later in SyncMeDown(...) irrespective of whether the file was edited or not
             } else {
                 // Directory is new; so add a new entry in FStree recursively
-                fst.Tree[child] = new(FSnode)
-                fst.Tree[child].Name = fi.Name()
-                fst.Tree[child].Size = fi.Size()
-                fst.Tree[child].IsDir = fi.IsDir()
-                fst.Tree[child].Children = make(map[string]bool)
-                fst.Tree[child].LastModTime = fi.ModTime()
+                fst[child] = new(FSnode)
+                fst[child].Name = fi.Name()
+                fst[child].Size = fi.Size()
+                fst[child].IsDir = fi.IsDir()
+                fst[child].Children = make(map[string]bool)
+                fst[child].LastModTime = fi.ModTime()
 
-                fst.Tree[child].VerVect = make(map[int]int)
-                fst.Tree[child].SyncVect = make(map[int]int)
-                fst.Tree[child].Parent = dir
-                fst.Tree[child].Exists = true
+                fst[child].VerVect = make(map[int]int64)
+                fst[child].SyncVect = make(map[int]int64)
+                fst[child].Parent = dir
+                fst[child].Exists = true
 
                 // Initialize VecVect, SyncVect
                 for i:=0; i<len(tnt.servers); i++ {
-                    fst.Tree[child].VerVect[i] = 0
-                    fst.Tree[child].SyncVect[i] = 0
+                    fst[child].VerVect[i] = 0
+                    fst[child].SyncVect[i] = 0
                 }
-                fst.Tree[child].VerVect[tnt.me] = 1
-                fst.Tree[child].SyncVect[tnt.me] = 1
+
+                fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                // fst[child].SyncVect[tnt.me] is edited later in SyncMeDown(...) irrespective of whether the file was edited or not
 
                 // Make an entry in parent directory
-                fst.Tree[dir].Children[child] = true
+                fst[dir].Children[child] = true
 
                 tnt.UpdateTree(child)
             }
@@ -179,45 +212,49 @@ func (tnt *TnTServer) UpdateTree(dir string) {
     }
 
     // Delete all my children, who were deleted since the last modification
-    for child, exists := range fst.Tree[dir].Children {
+    for child, exists := range fst[dir].Children {
         if exists == false {
-            if fst.Tree[child].Exists == true {
+            if fst[child].Exists == true {
                 tnt.DeleteTree(child)
             }
         }
+        // fst[child].SyncVect[tnt.me] is edited later in SyncMeDown(...) irrespective of whether the file was edited or not
     }
 
     // Update LastModTime, VerVect and SyncVect for 'dir' :
-    for child, _ := range  fst.Tree[dir].Children {
+    for child, _ := range  fst[dir].Children {
         // set my last mod time to be latest among all.
-        if fst.Tree[dir].LastModTime.Before(fst.Tree[child].LastModTime) {
-            fst.Tree[dir].LastModTime = fst.Tree[child].LastModTime
+        if fst[dir].LastModTime.Before(fst[child].LastModTime) {
+            fst[dir].LastModTime = fst[child].LastModTime
         }
 
         // VerVect is element-wise maximum of children's VerVect
-        for k, v := range fst.Tree[dir].VerVect {
-            if v < fst.Tree[child].VerVect[k] {
-                fst.Tree[dir].VerVect[k] = fst.Tree[child].VerVect[k]
+        for k, v := range fst[dir].VerVect {
+            if v < fst[child].VerVect[k] {
+                fst[dir].VerVect[k] = fst[child].VerVect[k]
             }
         }
 
         // SyncVect is element-wise minimum of children's SyncVect
-        for k, v := range fst.Tree[dir].SyncVect {
-            if v > fst.Tree[child].SyncVect[k] {
-                fst.Tree[dir].SyncVect[k] = fst.Tree[child].SyncVect[k]
+        for k, v := range fst[dir].SyncVect {
+            if v > fst[child].SyncVect[k] {
+                fst[dir].SyncVect[k] = fst[child].SyncVect[k]
             }
         }
     }
 }
 
 func (tnt *TnTServer) ParseTree(path string, depth int) {
-    fst := tnt.Tree
+    fst := tnt.Tree.MyTree
 
-    spaces(depth)
-    fmt.Println(fst.Tree[path].Name, ":", fst.Tree[path].LastModTime, fst.Tree[path].Exists, fst.Tree[path].VerVect, fst.Tree[path].SyncVect)
+    //spaces(depth)
+    fmt.Println(fst[path].Name, ":", fst[path].LastModTime, fst[path].Exists, fst[path].VerVect, fst[path].SyncVect)
 
-    if fst.Tree[path].IsDir {
-        for child, _ := range fst.Tree[path].Children {
+    if fst[path].IsDir {
+        for child, _ := range fst[path].Children {
+            spaces(depth)
+            //fmt.Println("--", path, "-", child, "fst[path].Children[child]:", fst[path].Children[child])
+            fmt.Printf("%t : ", fst[path].Children[child])
             tnt.ParseTree(child, depth+1)
         }
     }
@@ -239,22 +276,23 @@ func main() {
     if err != nil {
         fmt.Println(dump, "not found. Creating new tree...")
         fst := new(FStree)
-        fst.Tree = make(map[string]*FSnode)
-        fst.Tree[root] = new(FSnode)
-        fst.Tree[root].Name = root_folder
-        fst.Tree[root].IsDir = true
-        fst.Tree[root].Children = make(map[string]bool)
-        fst.Tree[root].LastModTime = time.Now()
+        fst.LogicalTime = 0
+        fst.MyTree = make(map[string]*FSnode)
+        fst.MyTree[root] = new(FSnode)
+        fst.MyTree[root].Name = root_folder
+        fst.MyTree[root].IsDir = true
+        fst.MyTree[root].Children = make(map[string]bool)
+        fst.MyTree[root].LastModTime = time.Now()
 
-        fst.Tree[root].VerVect = make(map[int]int)
-        fst.Tree[root].SyncVect = make(map[int]int)
-        fst.Tree[root].Parent = root
-        fst.Tree[root].Exists = true
+        fst.MyTree[root].VerVect = make(map[int]int64)
+        fst.MyTree[root].SyncVect = make(map[int]int64)
+        fst.MyTree[root].Parent = root
+        fst.MyTree[root].Exists = true
 
         // Initialize VecVect, SyncVect
         for i:=0; i<len(tnt.servers); i++ {
-            fst.Tree[root].VerVect[i] = 0
-            fst.Tree[root].SyncVect[i] = 0
+            fst.MyTree[root].VerVect[i] = 0
+            fst.MyTree[root].SyncVect[i] = 0
         }
 
         tnt.Tree = fst
@@ -266,7 +304,7 @@ func main() {
         tnt.Tree = &fst1
     }
 
-    tnt.UpdateTree(root)
+    tnt.UpdateTreeWrapper(root)
 
     tnt.ParseTree(root, 0)
 
