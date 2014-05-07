@@ -8,6 +8,7 @@ import (
     "os"
     "encoding/gob"
     "time"
+    "path/filepath"
 )
 
 const (
@@ -16,10 +17,10 @@ const (
 
 // ToDo: Handle the case when args.Path does not exist.
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
-
+    fmt.Println("Syncing ",args,tnt)
     fsn := tnt.Tree.MyTree[args.Path]
     reply.IsDir=make(map[string]bool)
-	for k,v:=range fsn.Children{
+	for k,_:=range fsn.Children{
 		reply.IsDir[k]=tnt.Tree.MyTree[k].IsDir
 	}
     // No need to copy stuff explicitly. Go RPC handles all this!
@@ -245,7 +246,7 @@ func (tnt *TnTServer) UpdateTree(dir string) {
 func (tnt *TnTServer) SyncWrapper(srv int, path string) {
     //Update tree and then sync
     tnt.mu.Lock()
-    tnt.UpdateTree(path)
+    tnt.UpdateTree(tnt.root+path)
     tnt.mu.Unlock()
     tnt.SyncNow(srv, path, false)
     tnt.LogToFile()
@@ -257,6 +258,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
 
     if onlySync == true {
         parent := fst[path].Parent
+
         setMaxVersionVect(fst[path].SyncVect, fst[parent].SyncVect )
 	return
     }
@@ -265,7 +267,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
     args:=&GetVersionArgs{Path:path}
     var reply GetVersionReply
     for {
-        ok:=call(tnt.Servers[srv], "TnTServer.GetVersion", args, &reply)
+        ok:=call(tnt.servers[srv], "TnTServer.GetVersion", args, &reply)
         if ok {
             break
         }
@@ -273,7 +275,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
     }
 
     mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
-    mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncHist)
+    //mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
 
     if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
         onlySync = true 	
@@ -284,15 +286,15 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             if !present {
                 tnt.mu.Lock()
             	fst[path].Children[k]=true;
-            	fs_node=make(FSnode);
-            	fs_node.VerVect=make(map[int]int)
-            	fs_node.SyncVect=make(map[int]int)
+            	fs_node:=new(FSnode);
+            	fs_node.VerVect=make(map[int]int64)
+            	fs_node.SyncVect=make(map[int]int64)
             	fs_node.Exists=false
             	fs_node.Children=make(map[string]bool)
             	fs_node.Name=k
             	fs_node.Parent=path
             	fs_node.IsDir=reply.IsDir[k]
-            	fst[k]=&fs_node
+            	fst[k]=fs_node
             	tnt.mu.Unlock()
           }
         }
@@ -301,12 +303,12 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
     //Case of the leaf node
     if len(fst[path].Children) == 0 {
         tnt.mu.Lock()
-        SyncSingle(srv, path, onlySync, reply)
+        tnt.SyncSingle(srv, path, onlySync, &reply)
         tnt.mu.Unlock()
     } else { // Pritish: added else for clarity of code
         //Case of the non-leaf node
-        for k, _ := fst[path].Children {
-            SyncNow(srv, k, onlySync)
+        for k, _ := range fst[path].Children {
+            tnt.SyncNow(srv, k, onlySync)
         }
     }
 }
@@ -353,6 +355,8 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
             if err != nil {
                 log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
             } else {
+		fst[path].Exists=true
+		fst[path].LastModTime=fi.ModTime()
 
             }
         } else /* reply.Exists == false */ {
@@ -364,12 +368,12 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
             } else {
                 os.Remove(tnt.root + path)
             }
-            fst[path].lastModTime = time.Now()
+            fst[path].LastModTime = time.Now()
             fst[path].Exists = false
         }
 
         // set modHist, syncHist
-        setVersionVect(fst[path].ModVect, reply.ModVect)
+        setVersionVect(fst[path].VerVect, reply.VerVect)
         setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 
     } else {
@@ -386,7 +390,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
             fmt.Println(tnt.me, "Delete-Delete conflict:", srv, "and", tnt.me, "deleted file independently : not really a conflict")
             setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 
-        } else if reply.Exists == false && tnt.Exists == true {
+        } else if reply.Exists == false && fst[path].Exists == true {
 
             // Ask user to choose:
             fmt.Println("Delete-Update conflict:", srv, "has deleted, but", tnt.me, "has updated")
@@ -458,7 +462,7 @@ func (tnt *TnTServer) Kill() {
 
 func StartServer(servers []string, me int, root string, fstpath string) *TnTServer {
   gob.Register(GetFileArgs{})
-  gob.Register(GerDirArgs{})
+  gob.Register(GetDirArgs{})
   tnt := new(TnTServer)
   tnt.me = me
   tnt.servers = servers
@@ -472,11 +476,11 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
   if err != nil {
       fmt.Println(tnt.dump, "not found. Creating new tree...")
       fst := new(FStree)
-      fst.Tree.MyTree = make(map[string]*FSnode)
-      fst.Tree.MyTree[root] = new(FSnode)
-      fst.Tree.MyTree[root].Name = root
-      fst.Tree.MyTree[root].Children = make(map[string]bool)
-      fst.Tree.MyTree[root].LastModTime = time.Now()
+      fst.MyTree = make(map[string]*FSnode)
+      fst.MyTree["./"] = new(FSnode)
+      fst.MyTree["./"].Name = root
+      fst.MyTree["./"].Children = make(map[string]bool)
+      fst.MyTree["./"].LastModTime = time.Now()
       tnt.Tree = fst
   } else {
       fmt.Println(tnt.dump, "found! Fetching tree...")
@@ -485,7 +489,7 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
       decoder.Decode(&fst1)
       tnt.Tree = &fst1
   }
-  tnt.UpdateTree(root)
+  tnt.UpdateTree(root+"./")
   fmt.Println("in start server",tnt.Tree)
 
   // RPC set-up borrowed from Lab
@@ -508,7 +512,7 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
           }
           if err != nil && tnt.dead == false {
               fmt.Printf("TnTServer(%v) accept: %v\n", me, err.Error())
-              tnt.kill()
+              tnt.Kill()
           }
       }
   }()

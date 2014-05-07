@@ -3,11 +3,11 @@ package main
 import (
   //"bufio"
   "fmt"
-  "io/ioutil"
   //"log"
   "os"
   "strconv"
   "TnT"
+  "path/filepath"
 )
 
 const (
@@ -47,16 +47,43 @@ func readLines(path string) ([]string, error) {
   return lines, scanner.Err()
 }
 */
-
-func printfiles(nservers int, fname string) {
-  for i:=0; i<nservers; i++ {
-    path := common_root + strconv.Itoa(i) + "/" + fname
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        fmt.Println(path, ": <!>\n")
-    } else {
-        fmt.Println(path, ":", string(data))
+func spaces(depth int) {
+    for i:=0; i<depth; i++ {
+        fmt.Printf("|")
     }
+    fmt.Printf("|- ")
+}
+
+
+func DFT(dirname string, depth int) {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+            spaces(depth)
+            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
+        }
+        if fi.IsDir() {
+            spaces(depth)
+            //fmt.Println(fi.Name(), ":")
+            fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
+            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+        }
+    }
+}
+func printfiles(nservers int) {
+  for i:=0; i<nservers; i++ {
+    path := common_root + strconv.Itoa(i) + "/" 
+    DFT(path,0)
   }
 }
 
@@ -102,7 +129,7 @@ func main() {
       }
 
       if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
-          tnts[a].SyncWrapper(b,"./")
+          tnts[a].SyncWrapper(b,"")
           printfiles(nservers)
       }
 
