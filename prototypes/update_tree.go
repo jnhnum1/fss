@@ -113,7 +113,7 @@ func (tnt *TnTServer) UpdateTree(dir string) {
     // (1) explore the file system, and make appropriate changes in FStree
     // (2) "delete" nodes in FStree which are not in the file system
 
-    d, err := os.Open(dir)
+    d, err := os.Open(tnt.root+dir)
     defer d.Close()
 
     if err != nil {
@@ -248,7 +248,7 @@ func (tnt *TnTServer) ParseTree(path string, depth int) {
     fst := tnt.Tree.MyTree
 
     //spaces(depth)
-    fmt.Println(fst[path].Name, ":", fst[path].LastModTime, fst[path].Exists, fst[path].VerVect, fst[path].SyncVect)
+    fmt.Println(path, fst[path].Name, ":", fst[path].LastModTime, fst[path].Exists, fst[path].VerVect, fst[path].SyncVect)
 
     if fst[path].IsDir {
         for child, _ := range fst[path].Children {
@@ -278,21 +278,21 @@ func main() {
         fst := new(FStree)
         fst.LogicalTime = 0
         fst.MyTree = make(map[string]*FSnode)
-        fst.MyTree[root] = new(FSnode)
-        fst.MyTree[root].Name = root_folder
-        fst.MyTree[root].IsDir = true
-        fst.MyTree[root].Children = make(map[string]bool)
-        fst.MyTree[root].LastModTime = time.Now()
+        fst.MyTree["./"] = new(FSnode)
+        fst.MyTree["./"].Name = root
+        fst.MyTree["./"].IsDir = true
+        fst.MyTree["./"].Children = make(map[string]bool)
+        fst.MyTree["./"].LastModTime = time.Now()
 
-        fst.MyTree[root].VerVect = make(map[int]int64)
-        fst.MyTree[root].SyncVect = make(map[int]int64)
-        fst.MyTree[root].Parent = root
-        fst.MyTree[root].Exists = true
+        fst.MyTree["./"].VerVect = make(map[int]int64)
+        fst.MyTree["./"].SyncVect = make(map[int]int64)
+        fst.MyTree["./"].Parent = root
+        fst.MyTree["./"].Exists = true
 
         // Initialize VecVect, SyncVect
         for i:=0; i<len(tnt.servers); i++ {
-            fst.MyTree[root].VerVect[i] = 0
-            fst.MyTree[root].SyncVect[i] = 0
+            fst.MyTree["./"].VerVect[i] = 0
+            fst.MyTree["./"].SyncVect[i] = 0
         }
 
         tnt.Tree = fst
@@ -304,9 +304,9 @@ func main() {
         tnt.Tree = &fst1
     }
 
-    tnt.UpdateTreeWrapper(root)
+    tnt.UpdateTreeWrapper("./")
 
-    tnt.ParseTree(root, 0)
+    tnt.ParseTree("./", 0)
 
     f, err = os.OpenFile(dump, os.O_WRONLY | os.O_CREATE, 0777)
     if err != nil {
