@@ -72,22 +72,42 @@ func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
 
 func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error {
   //Handle the directory case  
-  args := &GetFileArgs{FilePath:path}
-  var reply GetFileReply
+  if(tnt.Tree.MyTree[path].IsDir){
+  	args := &GetDirInfo{Path:path}
+  	var reply GetDirReply
+  	ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
+	if ok {
+    	if reply.Err != nil {
+        	log.Println(tnt.me, ": Error opening Directory:", reply.Err)
+	      } else {
+	      	
+    	      err := os.MkDir(tnt.root + dest, reply.Perm)
+        	  if err != nil {
+            	  log.Println(tnt.me, ": Error writing file:", err)
+	          }
+    	  }
+	  } else {
+    	  log.Println(tnt.me, ": GetDir RPC failed")
+	  }
+  	
+  }else{
+	args := &GetFileArgs{FilePath:path}
+	var reply GetFileReply
 
-  ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
-  if ok {
-      if reply.Err != nil {
-          log.Println(tnt.me, ": Error opening file:", reply.Err)
-      } else {
-          err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
-          if err != nil {
-              log.Println(tnt.me, ": Error writing file:", err)
-          }
-      }
-  } else {
-      log.Println(tnt.me, ": GetFile RPC failed")
-  }
+  	ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
+	if ok {
+    	if reply.Err != nil {
+        	log.Println(tnt.me, ": Error opening file:", reply.Err)
+	      } else {
+    	      err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
+        	  if err != nil {
+            	  log.Println(tnt.me, ": Error writing file:", err)
+	          }
+    	  }
+	  } else {
+    	  log.Println(tnt.me, ": GetFile RPC failed")
+	  }
+	}
 
   return reply.Err
 }

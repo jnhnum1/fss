@@ -20,7 +20,10 @@ const (
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
 
     fsn := tnt.Tree.MyTree[args.Path]
-
+    reply.IsDir=make(map[string]bool)
+	for k,v:=range fsn.Children{
+		reply.IsDir[k]=fsn[k].IsDir
+	}
     // No need to copy stuff explicitly. Go RPC handles all this!
     // Pritish: added Exists bool to reply. This is needed for SyncSingle, isn't it?
     reply.Exists, reply.VerVect, reply.SyncVect, reply.Children = fsn.Exists, fsn.VerVect, fsn.SyncVect, fsn.Children
@@ -50,11 +53,13 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
     tnt.PropagateUp(fst[path].VerVect, fst[path].SyncVect, fst[path].Parent)
 }
 
+
 func (tnt *TnTServer) UpdateTreeWrapper(dir string) {
     tnt.Tree.LogicalTime += 1
     tnt.UpdateTree(dir)
     tnt.SyncMeDown(dir)
 }
+
 
 func (tnt *TnTServer) SyncMeDown(path string) {
 
@@ -83,6 +88,7 @@ func (tnt *TnTServer) DeleteTree(dir string) {
             if fst[child].IsDir {
                 tnt.DeleteTree(child)
             } else {
+
                 fst[child].Exists = false
                 fst[child].LastModTime = time.Now()
                 fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
@@ -244,6 +250,7 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
     tnt.UpdateTree(path)
     tnt.mu.Unlock()
     tnt.SyncNow(srv, path, false)
+    tnt.LogToFile()
 }
 
 func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
@@ -277,37 +284,19 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
         for k, _ := range reply.Children {
             _, present := fst[path].Children[k]
             if !present {
-                args1 := &GetVersionArgs{Path: k}
-                var reply1 GetVersionReply
-                for {
-                    ok := call(tnt.Servers[srv], "TnTServer.GetVersion", args1, &reply1)
-                    if ok {
-                        break
-                    }
-                    time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
-                }
                 tnt.mu.Lock()
-                SyncSingle(srv, path, onlySync, reply1)
-                tnt.mu.Unlock()
-            }
-        }
-
-        for k, _ := range fst[path].Children {
-            _, present := reply.Children[k]
-            if !present {
-                args1 := &GetVersionArgs{Path:k}
-                var reply1 GetVersionReply
-                for {
-                    ok := call(tnt.Servers[srv],"TnTServer.GetVersion",args1,&reply1)
-                    if ok {
-                        break
-                    }
-                    time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
-                }
-                tnt.mu.Lock()
-                SyncSingle(srv, path, onlySync, reply1)
-                tnt.mu.Unlock()
-            }
+            	fst[path].Children[k]=true;
+            	fs_node=make(FSnode);
+            	fs_node.VerVect=make(map[int]int)
+            	fs_node.SyncVect=make(map[int]int)
+            	fs_node.Exists=false
+            	fs_node.Children=make(map[string]bool)
+            	fs_node.Name=k
+            	fs_node.Parent=path
+            	fs_node.IsDir=reply.IsDir[k]
+            	fst[k]=&fs_node
+            	tnt.mu.Unlock()
+          }
         }
     }
 

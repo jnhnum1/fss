@@ -22,6 +22,7 @@ type GetVersionReply struct{
   VerVect map[int]int64
   SyncVect map[int]int64
   Children map[string]bool
+  IsDir map[string]bool //For children
 }
 
 type GetFileArgs struct {
