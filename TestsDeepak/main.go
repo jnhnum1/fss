@@ -129,10 +129,11 @@ func main() {
       }
 
       if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
-          tnts[a].SyncWrapper(b,"")
+          tnts[a].SyncWrapper(b,"./")
           printfiles(nservers)
       }
 
       fmt.Println("-----------------------------")
   }
 }
+

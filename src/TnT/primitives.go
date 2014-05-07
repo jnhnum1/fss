@@ -8,6 +8,7 @@ import (
   "encoding/gob"
   "time"
   "sync"
+  "fmt"
 )
 
 type FSnode struct {
@@ -50,6 +51,29 @@ func (tnt *TnTServer) LogToFile(){
     f.Close()
 }
 
+
+func spaces(depth int) {
+    for i:=0; i<depth; i++ {
+        fmt.Printf("|")
+    }
+    fmt.Printf("|- ")
+}
+
+func (tnt *TnTServer) ParseTree(path string, depth int) {
+    fst := tnt.Tree.MyTree
+
+    //spaces(depth)
+    fmt.Println(fst[path].Name, ":", fst[path].LastModTime, fst[path].Exists, fst[path].VerVect, fst[path].SyncVect)
+
+    if fst[path].IsDir {
+        for child, _ := range fst[path].Children {
+            spaces(depth)
+            //fmt.Println("--", path, "-", child, "fst[path].Children[child]:", fst[path].Children[child])
+            //fmt.Printf("%t : ", fst[path].Children[child])
+            tnt.ParseTree(child, depth+1)
+        }
+    }
+}
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
   data, err := ioutil.ReadFile(tnt.root + args.FilePath)
   fi, err1 := os.Lstat(tnt.root + args.FilePath)
@@ -96,9 +120,12 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
 	      } else {
 	      	
     	      err := os.Mkdir(tnt.root + dest, reply.Perm)
+	      	
         	  if err != nil {
-            	  log.Println(tnt.me, ": Error writing file:", err)
-	          }
+            	  	log.Println(tnt.me, ": Error writing file:", err)
+	          }else{
+			tnt.Tree.MyTree[path].Exists=true
+		}
     	  }
 	  } else {
     	  log.Println(tnt.me, ": GetDir RPC failed")

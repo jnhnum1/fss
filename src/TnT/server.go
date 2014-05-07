@@ -17,16 +17,25 @@ const (
 
 // ToDo: Handle the case when args.Path does not exist.
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
-    fmt.Println("Syncing ",args,tnt)
-    fsn := tnt.Tree.MyTree[args.Path]
-    reply.IsDir=make(map[string]bool)
-	for k,_:=range fsn.Children{
-		reply.IsDir[k]=tnt.Tree.MyTree[k].IsDir
-	}
-    // No need to copy stuff explicitly. Go RPC handles all this!
-    // Pritish: added Exists bool to reply. This is needed for SyncSingle, isn't it?
-    reply.Exists, reply.VerVect, reply.SyncVect, reply.Children = fsn.Exists, fsn.VerVect, fsn.SyncVect, fsn.Children
-
+//    fmt.Println("Syncing ",args,tnt)
+    tnt.UpdateTreeWrapper("./") //ToDo: We should be more specific
+    fsn,present := tnt.Tree.MyTree[args.Path]
+    if !present{
+	reply.Exists=false
+	reply.VerVect=make(map[int]int64)
+	reply.SyncVect=make(map[int]int64)
+	reply.Children=make(map[string]bool)
+	reply.IsDir=make(map[string]bool)
+    }else{
+	    
+	    reply.IsDir=make(map[string]bool)
+		for k,_:=range fsn.Children{
+			reply.IsDir[k]=tnt.Tree.MyTree[k].IsDir
+		}
+	    // No need to copy stuff explicitly. Go RPC handles all this!
+	    // Pritish: added Exists bool to reply. This is needed for SyncSingle, isn't it?
+	    reply.Exists, reply.VerVect, reply.SyncVect, reply.Children = fsn.Exists, fsn.VerVect, fsn.SyncVect, fsn.Children
+    }
     return nil
 }
 
@@ -36,8 +45,8 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
     //Propagate the changes in a version vector upwards
 
     fst := tnt.Tree.MyTree // for ease of code
-
-    tnt.mu.Lock()
+    fmt.Println("PROPAGATE UP: path ",path)
+    tnt.ParseTree("./",0)
     for k,v:=range fst[path].VerVect{
         if v < VersionVector[k] {
             fst[path].VerVect[k]=v
@@ -48,7 +57,10 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
             fst[path].SyncVect[k]=v
         }
     }
-    tnt.mu.Unlock()
+
+    if path=="./"{
+	return
+    }
     tnt.PropagateUp(fst[path].VerVect, fst[path].SyncVect, fst[path].Parent)
 }
 
@@ -78,7 +90,7 @@ func (tnt *TnTServer) DeleteTree(dir string) {
     (1) "Deletes" entire sub-tree under 'dir'
     (2) Should be used only when fst[dir].Exists = true
     */
-
+    fmt.Println("DELETE TREE:",dir)
     fst := tnt.Tree.MyTree
 
     // Delete all children; recursively delete if child is a directory
@@ -112,7 +124,7 @@ func (tnt *TnTServer) UpdateTree(dir string) {
     // (1) explore the file system, and make appropriate changes in FStree
     // (2) "delete" nodes in FStree which are not in the file system
 
-    d, err := os.Open(dir)
+    d, err := os.Open(tnt.root+dir)
     defer d.Close()
 
     if err != nil {
@@ -246,7 +258,7 @@ func (tnt *TnTServer) UpdateTree(dir string) {
 func (tnt *TnTServer) SyncWrapper(srv int, path string) {
     //Update tree and then sync
     tnt.mu.Lock()
-    tnt.UpdateTree(tnt.root+path)
+    tnt.UpdateTreeWrapper(path)
     tnt.mu.Unlock()
     tnt.SyncNow(srv, path, false)
     tnt.LogToFile()
@@ -255,62 +267,71 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
 
     fst := tnt.Tree.MyTree // for ease of code
-
+    fmt.Println("PRINTING IN: SyncNow",srv,path,onlySync)
+    tnt.ParseTree("./",0)
     if onlySync == true {
         parent := fst[path].Parent
 
         setMaxVersionVect(fst[path].SyncVect, fst[parent].SyncVect )
-	return
-    }
+	for k, _ := range fst[path].Children {
+        	    tnt.SyncNow(srv, k, onlySync)
+        	}
+    }else{
 
-    //Sync Recursively
-    args:=&GetVersionArgs{Path:path}
-    var reply GetVersionReply
-    for {
-        ok:=call(tnt.servers[srv], "TnTServer.GetVersion", args, &reply)
-        if ok {
-            break
-        }
-        time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
-    }
+	    //Sync Recursively
+	    args:=&GetVersionArgs{Path:path}
+	    var reply GetVersionReply
+	    for {
+        	ok:=call(tnt.servers[srv], "TnTServer.GetVersion", args, &reply)
+	        if ok {
+        	    break
+        	}
+        	time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
+	    }
 
-    mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
-    //mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
+	    mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
+	    //mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
 
-    if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
-        onlySync = true 	
-    } else {
-        //Check if the children are consistent
-        for k, _ := range reply.Children {
-            _, present := fst[path].Children[k]
-            if !present {
-                tnt.mu.Lock()
-            	fst[path].Children[k]=true;
-            	fs_node:=new(FSnode);
-            	fs_node.VerVect=make(map[int]int64)
-            	fs_node.SyncVect=make(map[int]int64)
-            	fs_node.Exists=false
-            	fs_node.Children=make(map[string]bool)
-            	fs_node.Name=k
-            	fs_node.Parent=path
-            	fs_node.IsDir=reply.IsDir[k]
-            	fst[k]=fs_node
-            	tnt.mu.Unlock()
-          }
-        }
-    }
-
-    //Case of the leaf node
-    if len(fst[path].Children) == 0 {
-        tnt.mu.Lock()
-        tnt.SyncSingle(srv, path, onlySync, &reply)
-        tnt.mu.Unlock()
-    } else { // Pritish: added else for clarity of code
-        //Case of the non-leaf node
-        for k, _ := range fst[path].Children {
-            tnt.SyncNow(srv, k, onlySync)
-        }
-    }
+	    if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
+        	onlySync = true 	
+	    } else {
+        	//Check if the children are consistent
+	        for k, _ := range reply.Children {
+        	    _, present := fst[path].Children[k]
+        	    if !present {
+        	        tnt.mu.Lock()
+        	    	fst[path].Children[k]=true;
+        	    	fs_node:=new(FSnode);
+        	    	fs_node.VerVect=make(map[int]int64)
+        	    	fs_node.SyncVect=make(map[int]int64)
+        	    	fs_node.Exists=false
+        	    	fs_node.Children=make(map[string]bool)
+        	    	fs_node.Name=k
+        	    	fs_node.Parent=path
+        	    	fs_node.IsDir=reply.IsDir[k]
+        	    	fst[k]=fs_node
+        	    	tnt.mu.Unlock()
+          	}
+        	}
+    	}
+	    if !fst[path].Exists || !reply.Exists{
+		tnt.mu.Lock()
+        	tnt.SyncSingle(srv, path, onlySync, &reply)
+        	tnt.mu.Unlock()
+    	}
+	
+	    //Case of the leaf node
+	    if len(fst[path].Children) == 0 {
+        	tnt.mu.Lock()
+        	tnt.SyncSingle(srv, path, onlySync, &reply)
+        	tnt.mu.Unlock()
+    	} else { // Pritish: added else for clarity of code
+        	//Case of the non-leaf node
+        	for k, _ := range fst[path].Children {
+        	    tnt.SyncNow(srv, k, onlySync)
+        	}
+    	}
+  }	
 }
 
 func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *GetVersionReply) {
@@ -364,7 +385,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
             // delete local copy, set tnt.lastModTime = time.Now()
             if(fst[path].IsDir){
               	tnt.DeleteTree(path);
-                os.Remove(tnt.root + path)
+                os.RemoveAll(tnt.root + path)
             } else {
                 os.Remove(tnt.root + path)
             }
@@ -407,7 +428,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
                 // Delete local copy, set tnt.exists, tnt.lastModTime and update modHist and syncHist :
                 if(fst[path].IsDir){
                     tnt.DeleteTree(path);
-                    os.Remove(tnt.root + path)
+                    os.RemoveAll(tnt.root + path)
 	        } else {
                     os.Remove(tnt.root + path)
 	        }
@@ -417,14 +438,48 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
                 setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
             }
 
-        } else if reply.Exists == true {
+        } else if reply.Exists == true && !fst[path].Exists {
 
             /* Update-Delete or Update-Update conflict */
-            if fst[path].Exists == false {
-                fmt.Println("Update-Delete conflict:", srv, "has update, but", tnt.me, "has deleted")
-            } else {
-                fmt.Println("Update-Update conflict:", srv, "and", tnt.me, "have updated independently")
+            //if fst[path].Exists == false {
+            fmt.Println("Update-Delete conflict:", srv, "has update, but", tnt.me, "has deleted")
+            //} else {
+            //    fmt.Println("Update-Update conflict:", srv, "and", tnt.me, "have updated independently")
+            //}
+            choice := -1
+            for choice != tnt.me && choice != srv {
+                fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
+                fmt.Scanf("%d", &choice)
             }
+
+            if choice == tnt.me {
+                // If my version is chosen, simply update syncHist
+                setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+            } else {
+                // Fetch file, set tnt.lastModTime and update tnt.exists, modHist and syncHist :
+
+                // get file
+                tnt.CopyFileFromPeer(srv, path, path)
+                // set tnt.lastModTime
+                fi, err := os.Lstat(tnt.root + path)
+                if err != nil {
+                    log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
+                } else {
+                    fst[path].LastModTime = fi.ModTime()
+                }
+                // set exists, modHist, syncHist
+                fst[path].Exists = true
+                setVersionVect(fst[path].VerVect, reply.VerVect)
+                setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+            }
+        }else if reply.Exists == true && fst[path].Exists && !fst[path].IsDir{
+
+            /* Update-Delete or Update-Update conflict */
+            //if fst[path].Exists == false {
+            //fmt.Println("Update-Delete conflict:", srv, "has update, but", tnt.me, "has deleted")
+            //} else {
+            fmt.Println("Update-Update conflict:", srv, "and", tnt.me, "have updated independently")
+            //}
             choice := -1
             for choice != tnt.me && choice != srv {
                 fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
@@ -453,6 +508,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
             }
         }
     }
+    tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
 }
 
 func (tnt *TnTServer) Kill() {
@@ -481,6 +537,18 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
       fst.MyTree["./"].Name = root
       fst.MyTree["./"].Children = make(map[string]bool)
       fst.MyTree["./"].LastModTime = time.Now()
+      fst.MyTree["./"].VerVect = make(map[int]int64)
+      fst.MyTree["./"].SyncVect = make(map[int]int64)
+      fst.MyTree["./"].Parent = "./"
+      fst.MyTree["./"].Exists = true
+      fst.MyTree["./"].IsDir=true
+
+      // Initialize VecVect, SyncVect
+      for i:=0; i<len(tnt.servers); i++ {
+          fst.MyTree["./"].VerVect[i] = 0
+          fst.MyTree["./"].SyncVect[i] = 0
+      }
+
       tnt.Tree = fst
   } else {
       fmt.Println(tnt.dump, "found! Fetching tree...")
@@ -489,7 +557,7 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
       decoder.Decode(&fst1)
       tnt.Tree = &fst1
   }
-  tnt.UpdateTree(root+"./")
+  tnt.UpdateTreeWrapper("./")
   fmt.Println("in start server",tnt.Tree)
 
   // RPC set-up borrowed from Lab
