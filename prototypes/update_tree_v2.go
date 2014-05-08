@@ -157,7 +157,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
     fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
 
     if fi.IsDir() == false {
-        if fst[path].LastModTime.Before(fi.ModTime()) {
+        if fst[path].LastModTime.Equal(fi.ModTime()) == false {
             fst[path].LastModTime = fi.ModTime()
             fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
         }

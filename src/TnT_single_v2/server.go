@@ -93,7 +93,7 @@ func (tnt *TnTServer) UpdateLocalState() {
                 tnt.VerVect[i] = 0
             }
             tnt.VerVect[tnt.me] = tnt.LogicalTime
-        } else if tnt.LastModTime.Before(fi.ModTime()) {
+        } else if tnt.LastModTime.Equal(fi.ModTime()) == false {
             tnt.LastModTime = fi.ModTime()
             tnt.VerVect[tnt.me] = tnt.LogicalTime
         }
