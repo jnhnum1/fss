@@ -2,12 +2,12 @@ package main
 
 import (
   //"bufio"
+  //"log"
   "fmt"
   "io/ioutil"
-  //"log"
   "os"
   "strconv"
-  "TnT_single"
+  "TnT_single_v2"
 )
 
 const (
@@ -25,28 +25,11 @@ func port(tag string, host int) string {
   return s
 }
 
-func cleanup(tnts []*TnT_single.TnTServer) {
+func cleanup(tnts []*TnT_single_v2.TnTServer) {
   for i:=0; i < len(tnts); i++ {
     tnts[i].Kill()
   }
 }
-
-/*
-func readLines(path string) ([]string, error) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil, err
-  }
-  defer file.Close()
-
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    lines = append(lines, scanner.Text())
-  }
-  return lines, scanner.Err()
-}
-*/
 
 func printfiles(nservers int, fname string) {
   for i:=0; i<nservers; i++ {
@@ -60,17 +43,17 @@ func printfiles(nservers int, fname string) {
   }
 }
 
-func setup(tag string, nservers int, fname string) ([]*TnT_single.TnTServer, func()) {
+func setup(tag string, nservers int, fname string) ([]*TnT_single_v2.TnTServer, func()) {
 
   var peers []string = make([]string, nservers)
-  var tnts []*TnT_single.TnTServer = make([]*TnT_single.TnTServer, nservers)
+  var tnts []*TnT_single_v2.TnTServer = make([]*TnT_single_v2.TnTServer, nservers)
 
   for i:=0; i<nservers; i++ {
     peers[i] = port(tag, i)
   }
 
   for i:=0; i<nservers; i++ {
-    tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
+    tnts[i] = TnT_single_v2.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
   }
 
   clean := func() { (cleanup(tnts)) }

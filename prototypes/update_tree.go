@@ -83,25 +83,29 @@ func (tnt *TnTServer) DeleteTree(dir string) {
 
     fst := tnt.Tree.MyTree
 
-    // Delete all children; recursively delete if child is a directory
-    for child, exists := range fst[dir].Children {
-        if exists {
-            if fst[child].IsDir {
-                tnt.DeleteTree(child)
-            } else {
-                fst[child].Exists = false
-                fst[child].LastModTime = time.Now()
-                fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
-                //fst[child].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+    _, present := fst[dir]
+    if present {
+
+        // Delete all children; recursively delete if child is a directory
+        for child, exists := range fst[dir].Children {
+            if exists {
+                if fst[child].IsDir {
+                    tnt.DeleteTree(child)
+                } else {
+                    fst[child].Exists = false
+                    fst[child].LastModTime = time.Now()
+                    fst[child].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                    //fst[child].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                }
+                fst[dir].Children[child] = false
             }
-            fst[dir].Children[child] = false
         }
+        // Set my own state
+        fst[dir].Exists = false
+        fst[dir].LastModTime = time.Now()  // note: my LastModTime is higher than any of my children
+        fst[dir].VerVect[tnt.me] = tnt.Tree.LogicalTime
+        //fst[dir].SyncVect[tnt.me] = tnt.Tree.LogicalTime
     }
-    // Set my own state
-    fst[dir].Exists = false
-    fst[dir].LastModTime = time.Now()  // note: my LastModTime is higher than any of my children
-    fst[dir].VerVect[tnt.me] = tnt.Tree.LogicalTime
-    //fst[dir].SyncVect[tnt.me] = tnt.Tree.LogicalTime
 }
 
 func (tnt *TnTServer) UpdateTree(dir string) {
