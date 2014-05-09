@@ -156,7 +156,8 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
     //fmt.Println("in FST_watch_files", dirname)
     //fmt.Println(tnt.Tree.MyTree[dirname])
     var cur_file string
-    var seq_count int = 0
+    var seq_count int = 0 //This is for creation and mods from text editors
+    var mod_count int = 0 //This is for tracking modifications
     var move_count int = 0
     for {
         select {
@@ -204,15 +205,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         seq_count = 0
                         if(tnt.Tree.MyTree[ev.Name] == nil){
                             fmt.Println("new file was created", ev.Name)
-                            /*tnt.Tree.MyTree[ev.Name] = new(FSnode)
-                            tnt.Tree.MyTree[ev.Name].IsDir = false
-                            tnt.Tree.MyTree[ev.Name].VerVect = make(map[int]int)
-                            tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = 1
-                            tnt.Tree.MyTree[ev.Name].SyncVect = make(map[int]int)
-                            tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me] = 1
-                            tnt.Tree.MyTree[ev.Name].Parent = tnt.FST_find_parent(dirname, ev)
-                            tnt.Tree.MyTree[tnt.Tree.MyTree[ev.Name].Parent].Children[ev.Name] = true*/
-                            //fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
+
                         }else{
                             // 2) Modify a file - increment its modified vector by 1
                             fmt.Println("file has been modified", ev.Name)
@@ -224,6 +217,27 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }else {
                         seq_count = 0
                     }
+
+                    fmt.Println(mod_count)
+                    if(ev.Mask == IN_CREATE && mod_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
+                        cur_file = ev.Name
+                        mod_count = 1
+                    }else if(ev.Mask == IN_OPEN && mod_count == 1){
+
+                        mod_count = 2
+                    } else if(ev.Mask == IN_MODIFY && mod_count == 2){
+
+                        mod_count = 3
+                    }else if(ev.Mask == IN_CLOSE && cur_file == ev.Name && mod_count == 3){
+                        mod_count = 0
+
+                        // 2) Modify a file - increment its modified vector by 1
+                        fmt.Println("file has been modified", ev.Name)
+                    }else {
+                        mod_count = 0
+                    }
+
+
 
                     // 3) Delete a file - indicate it has been removed, don't necessarily remove it from tree
                     if(ev.Mask == IN_DELETE && tnt.Tree.MyTree[ev.Name] != nil){
