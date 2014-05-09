@@ -235,14 +235,14 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
                 _, present := reply.Children[k]
                 if present == false && fst[k].IsDir == true {
 		    args1:=&GetVersionArgs{Path:k}
-        var reply1 GetVersionReply
-        for {
-            ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
-            if ok1 {
-                break
-            }
-            time.Sleep(RPC_SLEEP_INTERVAL)
-                  }
+                    var reply1 GetVersionReply
+                    for {
+                        ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
+                        if ok1 {
+                            break
+                        }
+                        time.Sleep(RPC_SLEEP_INTERVAL)
+                    }
                     tnt.mu.Lock()
                     tnt.SyncSingle(srv, k, onlySync, &reply1, true)
                     tnt.mu.Unlock()
@@ -252,15 +252,15 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             for k, _ := range reply.Children {
                 _, present := fst[path].Children[k]
                 if present == false {
-			    args1:=&GetVersionArgs{Path:k}
-        var reply1 GetVersionReply
-        for {
-            ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
-            if ok1 {
-                break
-            }
-            time.Sleep(RPC_SLEEP_INTERVAL)
-                  }
+                    args1:=&GetVersionArgs{Path:k}
+                    var reply1 GetVersionReply
+                    for {
+                        ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
+                        if ok1 {
+                            break
+                        }
+                        time.Sleep(RPC_SLEEP_INTERVAL)
+                    }
                     tnt.mu.Lock()
                     //fst[path].Children[k] = true
                     tnt.SyncSingle(srv, k, onlySync, &reply1, reply.IsDir[k])
