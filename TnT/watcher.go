@@ -224,8 +224,6 @@ func (tnt *TnTServer) FST_watch_files(dirname string, watcher *inotify.Watcher){
                         fmt.Println("folder has been deleted")
                     }
 
-                    // 4) When a file is moved within the directory
-
                     // 5) Do nothing when transferring files from tmp/ to the rest of the directory
                     fmt.Println(ev.Name,"/home/zek/fss/roots/root0/tmp", move_count)
                     if(ev.Mask == IN_MOVE_FROM && strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp") && move_count == 0){

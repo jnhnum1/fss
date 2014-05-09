@@ -7,8 +7,8 @@ import (
     //"time"
     //"path/filepath"
     "strings"
-    "os"
-    "encoding/gob"
+    //"os"
+    //"encoding/gob"
 )
 
 /*
@@ -149,7 +149,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
         log.Fatal(err)
     }
 
-    FST_set_watch(dirname, watcher)
+    TnT_v2.FST_set_watch(dirname, watcher)
 
     fmt.Println("in FST_watch_files")
     //fmt.Println(tnt.Tree.MyTree[dirname])
