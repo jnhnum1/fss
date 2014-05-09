@@ -191,7 +191,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }
 
                     //This is the sequence of commands when a file is created or modified
-                    fmt.Println(seq_count)
+                    //fmt.Println(seq_count)
                     if(ev.Mask == IN_CREATE && seq_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
                         cur_file = ev.Name
                         seq_count = 1
@@ -218,8 +218,8 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         seq_count = 0
                     }
 
-                    fmt.Println(mod_count)
-                    if(ev.Mask == IN_CREATE && mod_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
+                    //fmt.Println(mod_count)
+                    if(ev.Mask == IN_MODIFY && mod_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
                         cur_file = ev.Name
                         mod_count = 1
                     }else if(ev.Mask == IN_OPEN && mod_count == 1){
