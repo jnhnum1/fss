@@ -1,34 +1,34 @@
 package main
 
 import (
-  //"bufio"
-  "fmt"
-  //"log"
-  "os"
-  "strconv"
-  "TnT_v2"
-  "path/filepath"
+  	//"bufio"
+  	"fmt"
+  	//"log"
+  	"os"
+  	"strconv"
+  	"TnT_v2"
+  	"path/filepath"
 )
 
 const (
-  common_root = "../roots/nest"
+  	common_root = "../roots/nest"
 )
 
 func port(tag string, host int) string {
-  s := "/var/tmp/824-"
-  s += strconv.Itoa(os.Getuid()) + "/"
-  os.Mkdir(s, 0777)
-  s += "tnt-"
-  s += strconv.Itoa(os.Getpid()) + "-"
-  s += tag + "-"
-  s += strconv.Itoa(host)
-  return s
+  	s := "/var/tmp/824-"
+  	s += strconv.Itoa(os.Getuid()) + "/"
+  	os.Mkdir(s, 0777)
+  	s += "tnt-"
+  	s += strconv.Itoa(os.Getpid()) + "-"
+  	s += tag + "-"
+  	s += strconv.Itoa(host)
+  	return s
 }
 
 func cleanup(tnts []*TnT_v2.TnTServer) {
-  for i:=0; i < len(tnts); i++ {
-    tnts[i].Kill()
-  }
+  	for i:=0; i < len(tnts); i++ {
+    	tnts[i].Kill()
+  	}
 }
 
 /*
@@ -81,71 +81,77 @@ func DFT(dirname string, depth int) {
     }
 }
 func printfiles(nservers int) {
-  for i:=0; i<nservers; i++ {
-    path := common_root + strconv.Itoa(i) + "/" 
-    DFT(path,0)
-  }
+  	for i:=0; i<nservers; i++ {
+    	path := common_root + strconv.Itoa(i) + "/" 
+    	DFT(path,0)
+  	}
 }
 
 func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
 
-  var peers []string = make([]string, nservers)
-  var tnts []*TnT_v2.TnTServer = make([]*TnT_v2.TnTServer, nservers)
+  	var peers []string = make([]string, nservers)
+  	var tnts []*TnT_v2.TnTServer = make([]*TnT_v2.TnTServer, nservers)
 
-  for i:=0; i<nservers; i++ {
-    peers[i] = port(tag, i)
-  }
+  	for i:=0; i<nservers; i++ {
+    	peers[i] = port(tag, i)
+  	}
 
-  for i:=0; i<nservers; i++ {
+  	for i:=0; i<nservers; i++ {
     //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
-  tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+  	tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 
-  fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
+  	fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
 
-  go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
+  	go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
 
-  }
+  	}
 
-  clean := func() { (cleanup(tnts)) }
-  return tnts, clean
+  	clean := func() { (cleanup(tnts)) }
+  	return tnts, clean
 }
 
 func main() {
 
-  const nservers = 3
+  	const nservers = 3
 
 
-  //printfiles(nservers)
+  	//printfiles(nservers)
 
-  _, clean := setup("sync", nservers)
-  defer clean()
+  	_, clean := setup("sync", nservers)
+  	defer clean()
   
-  fmt.Println("Test: Single File Syncing ...")
+  	fmt.Println("Test: Single File Syncing ...")
 
-  /*
-  fmt.Println("Enter -1 to quit the loop")
-  a := 100
-  b := 100
-  for a >= 0 && b >= 0 {
+  	/*
+  	fmt.Println("Enter -1 to quit the loop")
+  	a := 100
+  	b := 100
+  	for a >= 0 && b >= 0 {
 
-      fmt.Printf("Sync? Enter (who) and (from): ")
-      n, err := fmt.Scanf("%d %d\n", &a, &b)
-      if err != nil {
-          fmt.Println("Scanf error:", n, err)
-      }
+      	fmt.Printf("Sync? Enter (who) and (from): ")
+      	n, err := fmt.Scanf("%d %d\n", &a, &b)
+      	if err != nil {
+          	fmt.Println("Scanf error:", n, err)
+      	}
 
-      if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
-          tnts[a].SyncWrapper(b,"./")
-          //printfiles(nservers)
-      }
+      	if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
+          	tnts[a].SyncWrapper(b,"./")
+        	//printfiles(nservers)
+      	}
 
-      fmt.Println("-----------------------------")
-  }
-  */
+    	fmt.Println("-----------------------------")
+  	}
+  	*/
 
-  fmt.Println("Test: Sync File ...")	
+  	fmt.Println("Test: Sync File ...")	
 
-  os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
+  	//Create file on nest0
+  	os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
 
+  	//Sync with nest1
+	tnts[1].SyncWrapper(0,"./")
+	
+  	//Check that file is on nest 1
+	
 }
 
