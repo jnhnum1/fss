@@ -166,7 +166,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~")){                
-                    fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
+                    //fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
 
                 
                     // 1) Create a file/folder - add it to tree
@@ -190,7 +190,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         */
                     }
 
-                    //This is the sequence of commands when a file is created or modified
+                    //This is the sequence of commands when a file is created or modified in a text editor
                     //fmt.Println(seq_count)
                     if(ev.Mask == IN_CREATE && seq_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
                         cur_file = ev.Name
@@ -218,7 +218,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         seq_count = 0
                     }
 
-                    //fmt.Println(mod_count)
+                    //This is the events that occur when files modified from the command line
                     if(ev.Mask == IN_MODIFY && mod_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
                         cur_file = ev.Name
                         mod_count = 1

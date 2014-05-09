@@ -101,7 +101,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
   tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 
   fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
-  
+
   go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
 
   }
@@ -122,6 +122,7 @@ func main() {
   
   fmt.Println("Test: Single File Syncing ...")
 
+  /*
   fmt.Println("Enter -1 to quit the loop")
   a := 100
   b := 100
@@ -140,5 +141,11 @@ func main() {
 
       fmt.Println("-----------------------------")
   }
+  */
+
+  fmt.Println("Test: Sync File ...")	
+
+  fi,_ := os.Create(common_root+strconv.Itoa(i)+"/"+"1.txt")
+
 }
 
