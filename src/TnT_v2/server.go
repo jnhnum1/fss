@@ -61,11 +61,13 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 
 func (tnt *TnTServer) DeleteTree(path string) {
     // Deletes entire sub-tree under 'path' from FStree
+
     fmt.Println("DELETE TREE:", path)
     fst := tnt.Tree.MyTree
 
     if _, present := fst[path]; present {
         // Delete all children; recursively delete if child is a directory
+        delete(fst[fst[path].Parent].Children, path)
         for child, _ := range fst[path].Children {
             tnt.DeleteTree(child)
         }
@@ -169,7 +171,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
         for child, exists := range fst[path].Children {
             if exists == false {
                 tnt.DeleteTree(child)
-                delete(fst[path].Children, child)
+                //delete(fst[path].Children, child)
             }
         }
     }
@@ -189,6 +191,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
     fst := tnt.Tree.MyTree // for ease of code
     fmt.Println("PRINTING IN: SyncNow", srv, path, onlySync)
     tnt.ParseTree("./",0)
+
     if onlySync == true {
         parent := fst[path].Parent
         setMaxVersionVect(fst[path].SyncVect, fst[parent].SyncVect)
@@ -213,45 +216,48 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
 
         if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
             onlySync = true 	
-        } else {
-            //Check if the children are consistent
-            for k, _ := range reply.Children {
-                _, present := fst[path].Children[k]
-                if !present {
-                    tnt.mu.Lock()
-                    fst[path].Children[k]=true;
-                    fs_node:=new(FSnode);
-                    fs_node.VerVect=make(map[int]int64)
-                    fs_node.SyncVect=make(map[int]int64)
-                    fs_node.Exists=false
-                    fs_node.Children=make(map[string]bool)
-                    fs_node.Name=k
-                    fs_node.Parent=path
-                    fs_node.IsDir=reply.IsDir[k]
-                    fst[k]=fs_node
-                    tnt.mu.Unlock()
-                }
-            }
         }
 
+        /*
         if fst[path].Exists == false || reply.Exists == false {
             tnt.mu.Lock()
             tnt.SyncSingle(srv, path, onlySync, &reply)
             tnt.mu.Unlock()
         }
+        */
 	
+        for k, _ := range fst[path].Children {
+            _, present := reply.Children[k]
+            if present == false && fst[k].IsDir == true {
+                tnt.mu.Lock()
+                tnt.SyncSingle(srv, k, onlySync, &reply)
+                tnt.mu.Unlock()
+            }
+        }
+
+        for k, _ := range reply.Children {
+            _, present := fst[path].Children[k]
+            if present == false {
+                tnt.mu.Lock()
+                fst[path].Children[k] = true
+                if reply.IsDir[k] {
+                    tnt.SyncSingle(srv, k, onlySync, &reply)
+                }
+                tnt.mu.Unlock()
+            }
+        }
+
+        for k, _ := range fst[path].Children {
+            tnt.SyncNow(srv, k, onlySync)
+        }
+
         //Case of the leaf node
-        if len(fst[path].Children) == 0 {
+        if _, exists := fst[path]; exists == false || fst[path].IsDir == false {
             tnt.mu.Lock()
             tnt.SyncSingle(srv, path, onlySync, &reply)
             tnt.mu.Unlock()
-        } else {
-            //Case of the non-leaf node
-            for k, _ := range fst[path].Children {
-                tnt.SyncNow(srv, k, onlySync)
-            }
         }
-    }	
+    }
 }
 
 func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *GetVersionReply) {
@@ -384,7 +390,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
         }
     }
     // What should happen here?
-    // tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
+    tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
 }
 
 func (tnt *TnTServer) Kill() {
