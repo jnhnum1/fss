@@ -145,7 +145,7 @@ func main() {
 
   fmt.Println("Test: Sync File ...")	
 
-  fi,_ := os.Create(common_root+strconv.Itoa(i)+"/"+"1.txt")
+  fi,_ := os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
 
 }
 
