@@ -151,7 +151,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
     tnt.FST_set_watch(dirname, watcher)
 
-    fmt.Println("in FST_watch_files")
+    fmt.Println("in FST_watch_files", dirname)
     //fmt.Println(tnt.Tree.MyTree[dirname])
     var cur_file string
     var seq_count int = 0
