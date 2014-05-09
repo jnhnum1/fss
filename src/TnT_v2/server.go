@@ -37,6 +37,8 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
         }
         reply.Exists = true
         reply.VerVect, reply.SyncVect, reply.Children = fsn.VerVect, fsn.SyncVect, fsn.Children
+        reply.Creator, reply.CreationTime = fsn.Creator, fsn.CreationTime
+        fmt.Println("GET VERSION:", reply, fsn)
     }
     return nil
 }
@@ -212,7 +214,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             if ok {
                 break
             }
-            time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
+            time.Sleep(RPC_SLEEP_INTERVAL)
         }
 
         //Case of the leaf node
@@ -232,8 +234,17 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             for k, _ := range fst[path].Children {
                 _, present := reply.Children[k]
                 if present == false && fst[k].IsDir == true {
+		    args1:=&GetVersionArgs{Path:k}
+        var reply1 GetVersionReply
+        for {
+            ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
+            if ok1 {
+                break
+            }
+            time.Sleep(RPC_SLEEP_INTERVAL)
+                  }
                     tnt.mu.Lock()
-                    tnt.SyncSingle(srv, k, onlySync, &reply, true)
+                    tnt.SyncSingle(srv, k, onlySync, &reply1, true)
                     tnt.mu.Unlock()
                 }
             }
@@ -241,9 +252,18 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             for k, _ := range reply.Children {
                 _, present := fst[path].Children[k]
                 if present == false {
+			    args1:=&GetVersionArgs{Path:k}
+        var reply1 GetVersionReply
+        for {
+            ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
+            if ok1 {
+                break
+            }
+            time.Sleep(RPC_SLEEP_INTERVAL)
+                  }
                     tnt.mu.Lock()
                     //fst[path].Children[k] = true
-                    tnt.SyncSingle(srv, k, onlySync, &reply, true)
+                    tnt.SyncSingle(srv, k, onlySync, &reply1, reply.IsDir[k])
                     tnt.mu.Unlock()
                 }
             }
@@ -300,6 +320,7 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
     } else if reply.Exists == true && exists == false {
         live_ancestor := tnt.LiveAncestor(path)
         mA_vs_sB := compareVersionVects(reply.VerVect, fst[live_ancestor].SyncVect)
+        fmt.Println("UPDATE-DELETE:", path, live_ancestor, fst[live_ancestor].SyncVect, reply.Creator, reply.CreationTime, reply.VerVect, reply.SyncVect)
         if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
             action = DO_NOTHING
         } else if fst[live_ancestor].SyncVect[reply.Creator] < reply.CreationTime {
@@ -425,6 +446,8 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
       fst.MyTree["./"].IsDir=true
       fst.MyTree["./"].Children = make(map[string]bool)
       fst.MyTree["./"].LastModTime = time.Now()
+      fst.MyTree["./"].Creator = 0
+      fst.MyTree["./"].CreationTime = 0
       fst.MyTree["./"].VerVect = make(map[int]int64)
       fst.MyTree["./"].SyncVect = make(map[int]int64)
       fst.MyTree["./"].Parent = "./"

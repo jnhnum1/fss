@@ -77,7 +77,7 @@ func (tnt *TnTServer) ParseTree(path string, depth int) {
 
     if _, exists := fst[path]; exists {
         spaces(depth)
-        fmt.Println(fst[path].Name, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect)
+        fmt.Println(tnt.me, path, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect, fst[path].Creator, fst[path].CreationTime)
         if fst[path].IsDir {
             for child, _ := range fst[path].Children {
                 tnt.ParseTree(child, depth+1)
