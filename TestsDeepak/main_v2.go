@@ -118,6 +118,7 @@ func main() {
   	//printfiles(nservers)
 
   	tnts, clean := setup("sync", nservers)
+  	fmt.Println(tnts)
   	defer clean()
   
   	fmt.Println("Test: Single File Syncing ...")
