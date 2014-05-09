@@ -56,7 +56,7 @@ func (tnt *TnTServer) LiveAncestor(path string) string {
 
     fst := tnt.Tree.MyTree
 
-    prt = parent(path)
+    prt := parent(path)
     _, prt_present := fst[prt]
     for prt_present == false {
         prt = parent(prt)
@@ -75,12 +75,13 @@ func spaces(depth int) {
 func (tnt *TnTServer) ParseTree(path string, depth int) {
     fst := tnt.Tree.MyTree
 
-    spaces(depth)
-    fmt.Println(fst[path].Name, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect)
-
-    if fst[path].IsDir {
-        for child, _ := range fst[path].Children {
-            tnt.ParseTree(child, depth+1)
+    if _, exists := fst[path]; exists {
+        spaces(depth)
+        fmt.Println(fst[path].Name, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect)
+        if fst[path].IsDir {
+            for child, _ := range fst[path].Children {
+                tnt.ParseTree(child, depth+1)
+            }
         }
     }
 }
@@ -119,49 +120,42 @@ func (tnt *TnTServer) GetDir(args *GetDirArgs, reply *GetDirReply) error {
   return nil
 }
 
-func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error {
-  //Handle the directory case  
-  if(tnt.Tree.MyTree[path].IsDir){
-  	args := &GetDirArgs{Path:path}
-  	var reply GetDirReply
-  	ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
-	if ok {
-    	if reply.Err != nil {
-        	log.Println(tnt.me, ": Error opening Directory:", reply.Err)
-	      } else {
-	      	
-    	      err := os.Mkdir(tnt.root + dest, reply.Perm)
-	      	
-        	  if err != nil {
-            	  	log.Println(tnt.me, ": Error writing file:", err)
-	          }else{
-			tnt.Tree.MyTree[path].Exists=true
-		}
-    	  }
-	  } else {
-    	  log.Println(tnt.me, ": GetDir RPC failed")
-	  }
-	  return reply.Err
-  	
-  }else{
-	args := &GetFileArgs{FilePath:path}
-	var reply GetFileReply
+func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string, isDir bool) error {
+    //Handle the directory case  
+    if isDir {
+        args := &GetDirArgs{Path:path}
+        var reply GetDirReply
+        ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
+        if ok {
+            if reply.Err != nil {
+                log.Println(tnt.me, ": Error opening Directory:", reply.Err)
+            } else {
+                err := os.Mkdir(tnt.root + dest, reply.Perm)
+                if err != nil {
+                    log.Println(tnt.me, ": Error writing file:", err)
+                }
+            }
+        } else {
+            log.Println(tnt.me, ": GetDir RPC failed")
+        }
+        return reply.Err
+    } else {
+        args := &GetFileArgs{FilePath:path}
+        var reply GetFileReply
 
-  	ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
-	if ok {
-    	if reply.Err != nil {
-        	log.Println(tnt.me, ": Error opening file:", reply.Err)
-	      } else {
-    	      err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
-        	  if err != nil {
-            	  log.Println(tnt.me, ": Error writing file:", err)
-	          }
-    	  }
-	  } else {
-    	  log.Println(tnt.me, ": GetFile RPC failed")
-	  }
-	  return reply.Err
-	}
-
-
+        ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
+        if ok {
+            if reply.Err != nil {
+                log.Println(tnt.me, ": Error opening file:", reply.Err)
+            } else {
+                err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
+                if err != nil {
+                    log.Println(tnt.me, ": Error writing file:", err)
+                }
+            }
+        } else {
+            log.Println(tnt.me, ": GetFile RPC failed")
+        }
+        return reply.Err
+    }
 }

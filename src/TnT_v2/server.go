@@ -13,6 +13,10 @@ import (
 
 const (
     RPC_SLEEP_INTERVAL = 100*time.Millisecond
+
+    DO_NOTHING = 0
+    UPDATE = 1
+    DELETE = 2
 )
 
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
@@ -190,7 +194,7 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
 
     fst := tnt.Tree.MyTree // for ease of code
     fmt.Println("PRINTING IN: SyncNow", srv, path, onlySync)
-    tnt.ParseTree("./",0)
+    tnt.ParseTree("./", 0)
 
     if onlySync == true {
         parent := fst[path].Parent
@@ -211,56 +215,48 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
             time.Sleep(RPC_SLEEP_INTERVAL) //Pritish: added some sleep between successive RPCs
         }
 
-        mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
-        //mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
-
-        if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
-            onlySync = true 	
-        }
-
-        /*
-        if fst[path].Exists == false || reply.Exists == false {
-            tnt.mu.Lock()
-            tnt.SyncSingle(srv, path, onlySync, &reply)
-            tnt.mu.Unlock()
-        }
-        */
-	
-        for k, _ := range fst[path].Children {
-            _, present := reply.Children[k]
-            if present == false && fst[k].IsDir == true {
-                tnt.mu.Lock()
-                tnt.SyncSingle(srv, k, onlySync, &reply)
-                tnt.mu.Unlock()
-            }
-        }
-
-        for k, _ := range reply.Children {
-            _, present := fst[path].Children[k]
-            if present == false {
-                tnt.mu.Lock()
-                fst[path].Children[k] = true
-                if reply.IsDir[k] {
-                    tnt.SyncSingle(srv, k, onlySync, &reply)
-                }
-                tnt.mu.Unlock()
-            }
-        }
-
-        for k, _ := range fst[path].Children {
-            tnt.SyncNow(srv, k, onlySync)
-        }
-
         //Case of the leaf node
         if _, exists := fst[path]; exists == false || fst[path].IsDir == false {
             tnt.mu.Lock()
-            tnt.SyncSingle(srv, path, onlySync, &reply)
+            tnt.SyncSingle(srv, path, onlySync, &reply, false)
             tnt.mu.Unlock()
+        } else {
+
+            mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
+            //mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
+
+            if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
+                onlySync = true 	
+            }
+	
+            for k, _ := range fst[path].Children {
+                _, present := reply.Children[k]
+                if present == false && fst[k].IsDir == true {
+                    tnt.mu.Lock()
+                    tnt.SyncSingle(srv, k, onlySync, &reply, true)
+                    tnt.mu.Unlock()
+                }
+            }
+
+            for k, _ := range reply.Children {
+                _, present := fst[path].Children[k]
+                if present == false {
+                    tnt.mu.Lock()
+                    //fst[path].Children[k] = true
+                    tnt.SyncSingle(srv, k, onlySync, &reply, true)
+                    tnt.mu.Unlock()
+                }
+            }
+
+            for k, _ := range fst[path].Children {
+                tnt.SyncNow(srv, k, onlySync)
+            }
+            // else ends here : ToDo: indent
         }
     }
 }
 
-func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *GetVersionReply) {
+func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *GetVersionReply, isDir bool) {
     /*
     (1) Check for updates on local version of file: update VerVect, SyncVect if required
     (2) Get VerVect and SyncVect from 'srv'
@@ -345,7 +341,14 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
 
     if action == DO_NOTHING {
         fmt.Println("ACTION:", tnt.me, "has nothing to do")
-        setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+        if exists == true {
+            setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+            tnt.PropagateUp(fst[path].VerVect, fst[path].SyncVect, fst[path].Parent)
+        } else {
+            live_ancestor := tnt.LiveAncestor(path)
+            setMaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
+            tnt.PropagateUp(fst[live_ancestor].VerVect, fst[live_ancestor].SyncVect, fst[live_ancestor].Parent)
+        }
     } else if action == DELETE {
         fmt.Println("ACTION:", tnt.me, "is deleting file due to", srv)
         if fst[path].IsDir {
@@ -353,12 +356,13 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
         } else {
             os.Remove(tnt.root + path)
         }
+        setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+        tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
         tnt.DeleteTree(path)
-        //setMaxVersionVect(tnt.SyncVect, reply.SyncVect)
     } else if action == UPDATE {
         fmt.Println("ACTION:", tnt.me, "is getting file from", srv)
         // get file
-        tnt.CopyFileFromPeer(srv, path, path)
+        tnt.CopyFileFromPeer(srv, path, path, isDir)
         // set tnt.LastModTime
         fi, err := os.Lstat(tnt.root + path)
         if err != nil {
@@ -382,15 +386,16 @@ func (tnt *TnTServer) SyncSingle(srv int, path string, onlySync bool, reply *Get
                     fst[path].VerVect[i] = 0
                     fst[path].SyncVect[i] = 0
                 }
+                fst[path].Parent = parent(path)
+                fst[parent(path)].Children[path] = true
             }
             fst[path].LastModTime = fi.ModTime()
             fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
             setVersionVect(fst[path].VerVect, reply.VerVect)
             setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
         }
+        tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
     }
-    // What should happen here?
-    tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
 }
 
 func (tnt *TnTServer) Kill() {
@@ -405,8 +410,8 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
   tnt.me = me
   tnt.servers = servers
   tnt.root = root
-  fmt.Println(root+"*~")
-  os.Remove(root+"*~")
+  //fmt.Println(root+"*~")
+  //os.Remove(root+"*~")
   tnt.dump = fstpath //root+"FST_watch_new"
   
   f, err := os.Open(tnt.dump)
