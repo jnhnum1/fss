@@ -144,19 +144,37 @@ func main() {
   	}
   	*/
 
+  	var test_count int = 0
   	fmt.Println("Test: Sync File ...")	
 
   	//Create file on nest0
-  	os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
+  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
+  	os.Create(file_name)
 
   	//Sync with nest1
-	//tnts[1].SyncWrapper(0,"./")
+	tnts[1].SyncWrapper(0,"./")
 
-  	//Check that file is in nest1
+  	//Check that file is in nest1, Open throws error is file does not exist
   	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+"1.txt")
   	fmt.Println(err)
   	if err != nil {
-  		fmt.Println("Transfer Failed")
+  		fmt.Println("File Transfer Failed")
+  		os.Exit(1)
+  	}
+
+
+  	fmt.Println("Test: Sync Folder ...")
+
+  	//Create folder on nest0
+  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
+  	os.Mkdir(folder_name, 0777)
+  	tnts[2].SyncWrapper(0,"./")
+
+  	_,err := os.Open(common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/")
+  	fmt.Println(err)
+  	if err != nil {
+  		fmt.Println("Folder Transfer Failed")
+  		os.Exit(2)
   	}
 
 }
