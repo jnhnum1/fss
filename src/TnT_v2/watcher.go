@@ -200,6 +200,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
                         seq_count = 3
                     }else if(ev.Mask == IN_CLOSE && cur_file == ev.Name && seq_count == 3){
+                        seq_count = 0
                         if(tnt.Tree.MyTree[ev.Name] == nil){
                             fmt.Println("new file was created", ev.Name)
                             /*tnt.Tree.MyTree[ev.Name] = new(FSnode)
