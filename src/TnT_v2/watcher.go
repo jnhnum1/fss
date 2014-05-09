@@ -123,7 +123,7 @@ func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
     new_dirname := strings.TrimSuffix(dirname, "/")
 
     err := watcher.Watch(new_dirname)
-    
+
     if err != nil {
         log.Fatal(err)
     }
@@ -210,7 +210,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                             tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me] = 1
                             tnt.Tree.MyTree[ev.Name].Parent = tnt.FST_find_parent(dirname, ev)
                             tnt.Tree.MyTree[tnt.Tree.MyTree[ev.Name].Parent].Children[ev.Name] = true*/
-                            fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
+                            //fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
                         }else{
                             // 2) Modify a file - increment its modified vector by 1
                             fmt.Println("file has been modified")
@@ -239,7 +239,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }
 
                     // 5) Do nothing when transferring files from tmp/ to the rest of the directory
-                    fmt.Println(ev.Name,"/home/zek/fss/roots/root0/tmp", move_count)
+                    //fmt.Println(ev.Name,"/home/zek/fss/roots/root0/tmp", move_count)
                     if(ev.Mask == IN_MOVE_FROM && strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp") && move_count == 0){
                         fmt.Println("in here")
                         //This is when a file is moved into the tmp folder to be transferred out
