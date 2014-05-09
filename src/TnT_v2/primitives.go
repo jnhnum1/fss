@@ -1,4 +1,4 @@
-package TnT
+package TnT_v2
 
 import (
   "net"
@@ -8,6 +8,7 @@ import (
   "encoding/gob"
   "time"
   "sync"
+  "fmt"
 )
 
 type FSnode struct {
@@ -16,10 +17,11 @@ type FSnode struct {
     IsDir bool
     Children map[string]bool
     LastModTime time.Time
+    Creator int
+    CreationTime int64		//ask Zach to add this
     VerVect map[int]int64	//ask Zach to modify this
     SyncVect map[int]int64	//ask Zach to modify this
     Parent string		//ask Zach to add this
-    Exists bool			//ask Zach to add this
 }
 
 type FStree struct {
@@ -48,6 +50,39 @@ func (tnt *TnTServer) LogToFile(){
     encoder := gob.NewEncoder(f)
     encoder.Encode(tnt.Tree)
     f.Close()
+}
+
+func (tnt *TnTServer) LiveAncestor(path string) string {
+
+    fst := tnt.Tree.MyTree
+
+    prt = parent(path)
+    _, prt_present := fst[prt]
+    for prt_present == false {
+        prt = parent(prt)
+        _, prt_present = fst[prt]
+    }
+    return prt
+}
+
+func spaces(depth int) {
+    for i:=0; i<depth; i++ {
+        fmt.Printf(" |")
+    }
+    fmt.Printf(" |---- ")
+}
+
+func (tnt *TnTServer) ParseTree(path string, depth int) {
+    fst := tnt.Tree.MyTree
+
+    spaces(depth)
+    fmt.Println(fst[path].Name, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect)
+
+    if fst[path].IsDir {
+        for child, _ := range fst[path].Children {
+            tnt.ParseTree(child, depth+1)
+        }
+    }
 }
 
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
@@ -96,13 +131,17 @@ func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error 
 	      } else {
 	      	
     	      err := os.Mkdir(tnt.root + dest, reply.Perm)
+	      	
         	  if err != nil {
-            	  log.Println(tnt.me, ": Error writing file:", err)
-	          }
+            	  	log.Println(tnt.me, ": Error writing file:", err)
+	          }else{
+			tnt.Tree.MyTree[path].Exists=true
+		}
     	  }
 	  } else {
     	  log.Println(tnt.me, ": GetDir RPC failed")
 	  }
+	  return reply.Err
   	
   }else{
 	args := &GetFileArgs{FilePath:path}
