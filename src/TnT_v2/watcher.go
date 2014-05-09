@@ -149,7 +149,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
         log.Fatal(err)
     }
 
-    TnT_v2.FST_set_watch(dirname, watcher)
+    TnT.FST_set_watch(dirname, watcher)
 
     fmt.Println("in FST_watch_files")
     //fmt.Println(tnt.Tree.MyTree[dirname])
@@ -163,7 +163,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~")){                
-                    fmt.Println("ev: ", ev, "file node: ", tnt.Tree[ev.Name])
+                    fmt.Println("ev: ", ev, "file node: ", tnt.MyTree[ev.Name])
 
                 
                     // 1) Create a file/folder - add it to tree
@@ -198,7 +198,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
                         seq_count = 3
                     }else if(ev.Mask == IN_CLOSE && cur_file == ev.Name && seq_count == 3){
-                        if(tnt.Tree[ev.Name] == nil){
+                        if(tnt.MyTree[ev.Name] == nil){
                             fmt.Println("new file was created")
                             /*tnt.Tree.MyTree[ev.Name] = new(FSnode)
                             tnt.Tree.MyTree[ev.Name].IsDir = false
@@ -212,7 +212,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         }else{
                             // 2) Modify a file - increment its modified vector by 1
                             fmt.Println("file has been modified")
-                            if(tnt.Tree[ev.Name].VerVect[tnt.me] < tnt.Tree[ev.Name].SyncVect[tnt.me]){
+                            if(tnt.MyTree[ev.Name].VerVect[tnt.me] < tnt.MyTree[ev.Name].SyncVect[tnt.me]){
                                 //tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]++
                                 //tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]
                             }
@@ -224,7 +224,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     // 3) Delete a file - indicate it has been removed, don't necessarily remove it from tree
                     if(ev.Mask == IN_DELETE && tnt.Tree[ev.Name] != nil){
                         fmt.Println("file has been deleted")
-                        if(tnt.Tree[ev.Name].VerVect[tnt.me] < tnt.Tree[ev.Name].SyncVect[tnt.me]){
+                        if(tnt.MyTree[ev.Name].VerVect[tnt.me] < tnt.MyTree[ev.Name].SyncVect[tnt.me]){
                             //tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]++
                             //tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]
                             //tnt.Tree.MyTree[ev.Name].Exists = false
@@ -245,11 +245,11 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }else if( move_count == 1){
                         fmt.Println("file has been changed through sync, do nothing")
                         move_count = 0
-                    }else if(ev.Mask == IN_MOVE_TO && tnt.Tree[ev.Name] == nil){
+                    }else if(ev.Mask == IN_MOVE_TO && tnt.MyTree[ev.Name] == nil){
                         //This is when a file has been moved from a non-watched directory into
                         //our directory.  Treat as if new file were created
                         fmt.Println("new file was moved into directory")
-                    }else if(ev.Mask == IN_MOVE_TO && tnt.Tree[ev.Name].Exists == false){
+                    }else if(ev.Mask == IN_MOVE_TO && tnt.MyTree[ev.Name].Exists == false){
                         //File has previously been created, but then deleted, treat as new file?
                     }
                     
