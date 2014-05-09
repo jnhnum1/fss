@@ -170,11 +170,11 @@ func main() {
   	os.Mkdir(folder_name, 0777)
   	tnts[2].SyncWrapper(0,"./")
 
-  	_,err := os.Open(common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/")
+  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
   	fmt.Println(err)
   	if err != nil {
   		fmt.Println("Folder Transfer Failed")
-  		os.Exit(2)
+  		os.Exit(1)
   	}
 
 }
