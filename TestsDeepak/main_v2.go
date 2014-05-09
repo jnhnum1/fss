@@ -155,7 +155,7 @@ func main() {
 	tnts[1].SyncWrapper(0,"./")
 
   	//Check that file is in nest1, Open throws error is file does not exist
-  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+"1.txt")
+  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
   	fmt.Println(err)
   	if err != nil {
   		fmt.Println("File Transfer Failed")
@@ -164,7 +164,7 @@ func main() {
 
 
   	fmt.Println("Test: Sync Folder ...")
-
+  	test_count++
   	//Create folder on nest0
   	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
   	os.Mkdir(folder_name, 0777)
