@@ -120,8 +120,10 @@ func ReadFromDisk(dirname string, tnt *TnTServer) FStree {
 //This function sets watch on folders in directory
 func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
     fmt.Println("in fst_set_watch")
+    new_dirname := strings.TrimSuffix(dirname, "/")
 
-    err := watcher.Watch(dirname)
+    err := watcher.Watch(new_dirname)
+    
     if err != nil {
         log.Fatal(err)
     }
