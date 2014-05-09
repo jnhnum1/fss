@@ -151,7 +151,12 @@ func main() {
   	//Sync with nest1
 	tnts[1].SyncWrapper(0,"./")
 
-  	//Check that file is on nest 1
+  	//Check that file is in nest1
+  	err := os.Open(common_root+strconv.Itoa(1)+"/"+"1.txt")
+  	fmt.Println(err)
+  	if err != nil {
+  		fmt.Println("Transfer Failed")
+  	}
 
 }
 
