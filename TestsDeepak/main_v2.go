@@ -117,7 +117,7 @@ func main() {
 
   //printfiles(nservers)
 
-  tnts, clean := setup("sync", nservers)
+  _, clean := setup("sync", nservers)
   defer clean()
   
   fmt.Println("Test: Single File Syncing ...")
@@ -145,7 +145,7 @@ func main() {
 
   fmt.Println("Test: Sync File ...")	
 
-  fi,_ := os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
+  _,_ := os.Create(common_root+strconv.Itoa(0)+"/"+"1.txt")
 
 }
 
