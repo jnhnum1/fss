@@ -117,7 +117,7 @@ func main() {
 
   	//printfiles(nservers)
 
-  	_, clean := setup("sync", nservers)
+  	tnts, clean := setup("sync", nservers)
   	defer clean()
   
   	fmt.Println("Test: Single File Syncing ...")
@@ -150,8 +150,8 @@ func main() {
 
   	//Sync with nest1
 	tnts[1].SyncWrapper(0,"./")
-	
+
   	//Check that file is on nest 1
-	
+
 }
 
