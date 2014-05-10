@@ -1,5 +1,4 @@
 package TnT_v2
-
 import (
 	"fmt"
 	"net"
@@ -43,7 +42,6 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
 		reply.Creator, reply.CreationTime = fsn.Creator, fsn.CreationTime
 	}
 	fmt.Println("GET VERSION:", args.Path, reply)
-	tnt.ParseTree("./",0)
 	return nil
 }
 
@@ -72,7 +70,7 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 func (tnt *TnTServer) DeleteTree(path string) {
 	// Deletes entire sub-tree under 'path' from FStree
 
-	fmt.Println(tnt.me, "DELETE TREE:", path)
+	//fmt.Println(tnt.me, "DELETE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	if _, present := fst[path]; present {
@@ -98,7 +96,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	reachable from the root. It is fine if stuff under 'path' are not in FST already.
 	*/
 
-	fmt.Println(tnt.me, "UPDATE TREE:", path)
+	//fmt.Println(tnt.me, "UPDATE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	fi, err := os.Lstat(tnt.root + path)
@@ -118,6 +116,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 		fst[path].CreationTime = tnt.Tree.LogicalTime
 
 		if fi.IsDir() {
+			fmt.Println("did i make my children?", path)
 			fst[path].Children = make(map[string]bool)
 		}
 
@@ -130,6 +129,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 
 		prt := parent(path)
 		fst[path].Parent = prt
+		fmt.Println("PARENT: ", prt, "PATH: ", path)
 		fst[prt].Children[path] = true
 
 		fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
@@ -197,11 +197,10 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 	tnt.mu.Lock()
 	//tnt.UpdateTreeWrapper(path)
 	
-	tnt.ParseTree("./",0)
+	tnt.ParseTree("./", 0)
 	tnt.SyncDir(srv, path)
-	tnt.ParseTree("./",0)
 	tnt.mu.Unlock()
-	//tnt.ParseTree("./", 0)
+	tnt.ParseTree("./", 0)
 	tnt.LogToFile()
 }
 
@@ -286,19 +285,21 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 	var syncVect map[int]int64
 
 	if action == DO_NOTHING {
+		fmt.Println("ACTION:", tnt.me, "has nothing to do for", path)
 		live_ancestor := tnt.LiveAncestor(path) // should be the parent actually
 		syncVect = MaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
 		exists = false
 		//setMaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
 		//tnt.PropagateUp(fst[live_ancestor].VerVect, fst[live_ancestor].SyncVect, fst[live_ancestor].Parent)
 	} else if action == DELETE {
-		fmt.Println("ACTION:", tnt.me, "is deleting file due to", srv)
+		fmt.Println("ACTION:", tnt.me, "is deleting", path, "due to", srv)
 		os.RemoveAll(tnt.root + path)
 		syncVect = MaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		//tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
 		tnt.DeleteTree(path)
 		exists = false
 	} else if action == UPDATE {
+		fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv)
 		if exists == false {
 			tnt.CopyDirFromPeer(srv, path, path)
 			// set tnt.LastModTime
@@ -366,6 +367,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
 		exists = true
 	} else /* action == SYNC_DOWN */ {
+		fmt.Println("ACTION:", tnt.me, "is only syncing down for", path)
 		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		tnt.OnlySync(path)
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
@@ -485,14 +487,14 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 			//tnt.PropagateUp(fst[live_ancestor].VerVect, fst[live_ancestor].SyncVect, fst[live_ancestor].Parent)
 		}
 	} else if action == DELETE {
-		fmt.Println("ACTION:", tnt.me, "is deleting file due to", srv)
+		fmt.Println("ACTION:", tnt.me, "is deleting", path, "due to", srv)
 		os.Remove(tnt.root + path) // os.RemoveAll(tnt.root + path)
 		syncVect = MaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		//tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
 		tnt.DeleteTree(path)
 		exists = false
 	} else if action == UPDATE {
-		fmt.Println("ACTION:", tnt.me, "is getting file from", srv)
+		fmt.Println("ACTION:", tnt.me, "is getting", path, "from", srv)
 		// get file
 		tnt.CopyFileFromPeer(srv, path, path)
 		// set tnt.LastModTime

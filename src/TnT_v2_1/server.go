@@ -543,6 +543,7 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
 	tnt.servers = servers
 	tnt.root = root
 	tnt.dump = fstpath //root+"FST_watch_new"
+	tnt.tmp = "roots/tmp"
   
 	f, err := os.Open(tnt.dump)
 	defer f.Close()
