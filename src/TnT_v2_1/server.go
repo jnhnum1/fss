@@ -41,8 +41,8 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
 		reply.Exists = true
 		reply.VerVect, reply.SyncVect, reply.Children = fsn.VerVect, fsn.SyncVect, fsn.Children
 		reply.Creator, reply.CreationTime = fsn.Creator, fsn.CreationTime
-		fmt.Println("GET VERSION:", reply, fsn)
 	}
+	fmt.Println("GET VERSION:", args.Path, reply)
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 func (tnt *TnTServer) DeleteTree(path string) {
 	// Deletes entire sub-tree under 'path' from FStree
 
-	fmt.Println("DELETE TREE:", path)
+	fmt.Println(tnt.me, "DELETE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	if _, present := fst[path]; present {
@@ -97,6 +97,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	reachable from the root. It is fine if stuff under 'path' are not in FST already.
 	*/
 
+	fmt.Println(tnt.me, "UPDATE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	fi, err := os.Lstat(tnt.root + path)
@@ -125,6 +126,10 @@ func (tnt *TnTServer) UpdateTree(path string) {
 			fst[path].VerVect[i] = 0
 			fst[path].SyncVect[i] = 0
 		}
+
+		prt := parent(path)
+		fst[path].Parent = prt
+		fst[prt].Children[path] = true
 
 		fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
 		// fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime // set outside - unconditionally
@@ -162,7 +167,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 			}
 			tnt.UpdateTree(child)
 			fst[path].Children[child] = true
-			fst[child].Parent = path
+			//fst[child].Parent = path
 
 			// Update LastModTime, VerVect and SyncVect for 'dir' :
 
@@ -291,7 +296,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		exists = false
 	} else if action == UPDATE {
 		if exists == false {
-			tnt.CopyFileFromPeer(srv, path, path)
+			tnt.CopyDirFromPeer(srv, path, path)
 			// set tnt.LastModTime
 			fi, err := os.Lstat(tnt.root + path)
 			if err != nil {
@@ -485,7 +490,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 	} else if action == UPDATE {
 		fmt.Println("ACTION:", tnt.me, "is getting file from", srv)
 		// get file
-		tnt.CopyDirFromPeer(srv, path, path)
+		tnt.CopyFileFromPeer(srv, path, path)
 		// set tnt.LastModTime
 		fi, err := os.Lstat(tnt.root + path)
 		if err != nil {
