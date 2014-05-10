@@ -172,8 +172,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 			}
 
 			setMaxVersionVect(fst[path].VerVect, fst[child].VerVect)  // VerVect is element-wise maximum of children's VerVect
-			// SyncVect is element-wise maximum of children's SyncVect - no need to set because everything will anyway be tnt.Tree.LogicalTime!
-			//setMinVersionVect(fst[path].SyncVect, fst[child].SyncVect)
+			setMinVersionVect(fst[path].SyncVect, fst[child].SyncVect) // SyncVect is element-wise minimum of children's SyncVect
 		}
 
 		// Delete all my children, who were deleted since the last sync
@@ -277,70 +276,92 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 	var syncVect map[int]int64
 
 	if action == DO_NOTHING {
-
+		live_ancestor := tnt.LiveAncestor(path) // should be the parent actually
+		syncVect = MaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
+		exists = false
+		//setMaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
+		//tnt.PropagateUp(fst[live_ancestor].VerVect, fst[live_ancestor].SyncVect, fst[live_ancestor].Parent)
 	} else if action == DELETE {
-
+		fmt.Println("ACTION:", tnt.me, "is deleting file due to", srv)
+		os.RemoveAll(tnt.root + path)
+		syncVect = MaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+		//tnt.PropagateUp(fst[path].VerVect,fst[path].SyncVect,fst[path].Parent)
+		tnt.DeleteTree(path)
+		exists = false
 	} else if action == UPDATE {
+		if exists == false {
+			tnt.CopyFileFromPeer(srv, path, path, true)
+			// set tnt.LastModTime
+			fi, err := os.Lstat(tnt.root + path)
+			if err != nil {
+				log.Println(tnt.me, ": File does not exist:", err, ": LOL - had copied just now!")
+			} else {
 
-	} else /* action == SYNC_DOWN */ {
-
-	}
-	//Case of the leaf node
-	if _, exists := fst[path]; exists == false || fst[path].IsDir == false {
-		tnt.mu.Lock()
-		tnt.SyncSingle(srv, path, onlySync, &reply, false)
-		tnt.mu.Unlock()
-	} else {
-
-		mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
-		//mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect)
-
-		if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
-			onlySync = true 	
-		}
-	
-		for k, _ := range fst[path].Children {
-			_, present := reply.Children[k]
-			if present == false && fst[k].IsDir == true {
-				args1:=&GetVersionArgs{Path:k}
-				var reply1 GetVersionReply
-				for {
-					ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
-					if ok1 {
-						break
-					}
-					time.Sleep(RPC_SLEEP_INTERVAL)
+				// Create new FSnode
+				fst[path] = new(FSnode)
+				fst[path].Name = fi.Name()
+				fst[path].Size = fi.Size()
+				fst[path].IsDir = fi.IsDir()
+				fst[path].LastModTime = fi.ModTime()
+				fst[path].Children = make(map[string]bool)
+				fst[path].VerVect = make(map[int]int64)
+				fst[path].SyncVect = make(map[int]int64)
+				for i:=0; i<len(tnt.servers); i++ {
+					fst[path].VerVect[i] = 0
+					fst[path].SyncVect[i] = 0
 				}
-				tnt.mu.Lock()
-				tnt.SyncSingle(srv, k, onlySync, &reply1, true)
-				tnt.mu.Unlock()
+				fst[path].Parent = parent(path)
+				fst[parent(path)].Children[path] = true
 			}
 		}
 
+		for k, _ := range fst[path].Children {
+			var c_exists bool
+			var c_verVect map[int]int64
+			var c_syncVect map[int]int64
+			if fst[k].IsDir == true {
+				c_exists, c_verVect, c_syncVect = tnt.SyncDir(k)
+			} else {
+				c_exists, c_verVect, c_syncVect = tnt.SyncFile(k)
+			}
+			if c_exists == true {
+				setMaxVersionVect(fst[path].VerVect, c_verVect)
+				setMinVersionVect(fst[path].SyncVect, c_syncVect)
+			} else {
+				setMinVersionVect(fst[path].SyncVect, c_syncVect)
+			}
+		}
 		for k, _ := range reply.Children {
 			_, present := fst[path].Children[k]
 			if present == false {
-				args1:=&GetVersionArgs{Path:k}
-				var reply1 GetVersionReply
-				for {
-					ok1:=call(tnt.servers[srv], "TnTServer.GetVersion", args1, &reply1)
-					if ok1 {
-						break
-					}
-					time.Sleep(RPC_SLEEP_INTERVAL)
+				var c_exists bool
+				var c_verVect map[int]int64
+				var c_syncVect map[int]int64
+				if reply.IsDir[k] == true {
+					c_exists, c_verVect, c_syncVect = tnt.SyncDir(k)
+				} else {
+					c_exists, c_verVect, c_syncVect = tnt.SyncFile(k)
 				}
-				tnt.mu.Lock()
-				//fst[path].Children[k] = true
-				tnt.SyncSingle(srv, k, onlySync, &reply1, reply.IsDir[k])
-				tnt.mu.Unlock()
+				if c_exists == true {
+					setMaxVersionVect(fst[path].VerVect, c_verVect)
+					setMinVersionVect(fst[path].SyncVect, c_syncVect)
+				} else {
+					setMinVersionVect(fst[path].SyncVect, c_syncVect)
+				}
 			}
 		}
-
-		for k, _ := range fst[path].Children {
-			tnt.SyncNow(srv, k, onlySync)
-		}
-		// else ends here : ToDo: indent
+		//fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
+		setVersionVect(fst[path].VerVect, reply.VerVect)
+		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
+		exists = true
+	} else /* action == SYNC_DOWN */ {
+		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+		tnt.OnlySync(path)
+		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
+		exists = true
 	}
+	return exists, verVect, syncVect
 }
 
 func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[int]int64) {
@@ -476,11 +497,6 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 				fst[path].Name = fi.Name()
 				fst[path].Size = fi.Size()
 				fst[path].IsDir = fi.IsDir()
-
-				if fi.IsDir() {
-					fst[path].Children = make(map[string]bool)
-				}
-
 				fst[path].VerVect = make(map[int]int64)
 				fst[path].SyncVect = make(map[int]int64)
 				for i:=0; i<len(tnt.servers); i++ {
