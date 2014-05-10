@@ -17,6 +17,8 @@ const (
 	DO_NOTHING = 0
 	UPDATE = 1
 	DELETE = 2
+
+    END_OF_WORLD = 0x7fffffffffffffff
 )
 
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
@@ -189,6 +191,7 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 	tnt.UpdateTreeWrapper(path)
 	tnt.mu.Unlock()
 	tnt.SyncNow(srv, path, false)
+	//tnt.ParseTree("./", 0)
 	tnt.LogToFile()
 }
 
@@ -196,12 +199,11 @@ func (tnt *TnTServer) SyncNow(srv int, path string, onlySync bool) {
 
 	fst := tnt.Tree.MyTree // for ease of code
 	fmt.Println("PRINTING IN: SyncNow", srv, path, onlySync)
-	tnt.ParseTree("./", 0)
 
 	if onlySync == true {
 		parent := fst[path].Parent
 		setMaxVersionVect(fst[path].SyncVect, fst[parent].SyncVect)
-	for k, _ := range fst[path].Children {
+		for k, _ := range fst[path].Children {
 			tnt.SyncNow(srv, k, onlySync)
 		}
 	} else {
@@ -445,7 +447,7 @@ func StartServer(servers []string, me int, root string, fstpath string) *TnTServ
 		fst.MyTree["./"].Children = make(map[string]bool)
 		fst.MyTree["./"].LastModTime = time.Now()
 		fst.MyTree["./"].Creator = 0
-		fst.MyTree["./"].CreationTime = 0
+		fst.MyTree["./"].CreationTime = END_OF_WORLD // If a guy accidentally deletes root, it will be imported from the other!
 		fst.MyTree["./"].VerVect = make(map[int]int64)
 		fst.MyTree["./"].SyncVect = make(map[int]int64)
 		fst.MyTree["./"].Parent = "./"
