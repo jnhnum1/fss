@@ -171,7 +171,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     fi, err := os.Lstat(ev.Name)
                     //trim_name := strings.TrimPrefix(ev.Name, tnt.root)
 
-                    fmt.Println("did the files open?", dirname, tnt.root, ev.Name, fi, err)
+                    //fmt.Println("did the files open?", dirname, tnt.root, ev.Name, fi, err)
                 
                     // 1) Create a file/folder - add it to tree
                     //Folder only command is IN_CREATE with name as path
@@ -181,28 +181,29 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         if err != nil {
                             log.Fatal(err)
                         }
-                        /*
-                        fst[path] = new(FSnode)
-                        fst[path].Name = fi.Name()
-                        fst[path].Size = fi.Size()
-                        fst[path].IsDir = fi.IsDir()
-                        fst[path].LastModTime = fi.ModTime()
-                        fst[path].Creator = tnt.me
-                        fst[path].CreationTime = tnt.Tree.LogicalTime
+                        
+                        tnt.Tree.MyTree[ev.Name] = new(FSnode)
+                        tnt.Tree.MyTree[ev.Name].Name = fi.Name()
+                        tnt.Tree.MyTree[ev.Name].Size = fi.Size()
+                        tnt.Tree.MyTree[ev.Name].IsDir = fi.IsDir()
+                        tnt.Tree.MyTree[ev.Name].LastModTime = fi.ModTime()
+                        tnt.Tree.MyTree[ev.Name].Creator = tnt.me
+                        tnt.Tree.MyTree[ev.Name].CreationTime = tnt.Tree.LogicalTime
 
-                        fst[path].Children = make(map[string]bool)
+                        tnt.Tree.MyTree[ev.Name].Children = make(map[string]bool)
 
-                        fst[path].VerVect = make(map[int]int64)
-                        fst[path].SyncVect = make(map[int]int64)
+                        tnt.Tree.MyTree[ev.Name].VerVect = make(map[int]int64)
+                        tnt.Tree.MyTree[ev.Name].SyncVect = make(map[int]int64)
                         for i:=0; i<len(tnt.servers); i++ {
-                            fst[path].VerVect[i] = 0
-                            fst[path].SyncVect[i] = 0
+                            tnt.Tree.MyTree[ev.Name].VerVect[i] = 0
+                            tnt.Tree.MyTree[ev.Name].SyncVect[i] = 0
                         }
 
-                        fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[ev.Name].Parent = tnt.LiveAncestor(ev.Name)                      
 
-                        fmt.Println("parent is ", tnt.Tree.MyTree[child_name].Parent)
-                        */
+                        fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
+                        
                     }
 
                     //This is the sequence of commands when a file is created or modified in a text editor
