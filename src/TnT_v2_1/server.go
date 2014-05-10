@@ -179,6 +179,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 		for child, exists := range fst[path].Children {
 			if exists == false {
 				tnt.DeleteTree(child)
+				fst[path].VerVect[tnt.me]=tnt.Tree.LogicalTime
 				//delete(fst[path].Children, child)
 			}
 		}
@@ -202,7 +203,7 @@ func (tnt *TnTServer) OnlySync(path string) {
 	parent := fst[path].Parent
 	setMaxVersionVect(fst[path].SyncVect, fst[parent].SyncVect)
 	for k, _ := range fst[path].Children {
-		tnt.SyncNow(srv, k, onlySync)
+		tnt.OnlySync(k)
 	}
 }
 
@@ -320,9 +321,9 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			var c_verVect map[int]int64
 			var c_syncVect map[int]int64
 			if fst[k].IsDir == true {
-				c_exists, c_verVect, c_syncVect = tnt.SyncDir(k)
+				c_exists, c_verVect, c_syncVect = tnt.SyncDir(srv,k)
 			} else {
-				c_exists, c_verVect, c_syncVect = tnt.SyncFile(k)
+				c_exists, c_verVect, c_syncVect = tnt.SyncFile(srv,k)
 			}
 			if c_exists == true {
 				setMaxVersionVect(fst[path].VerVect, c_verVect)
@@ -338,9 +339,9 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 				var c_verVect map[int]int64
 				var c_syncVect map[int]int64
 				if reply.IsDir[k] == true {
-					c_exists, c_verVect, c_syncVect = tnt.SyncDir(k)
+					c_exists, c_verVect, c_syncVect = tnt.SyncDir(srv,k)
 				} else {
-					c_exists, c_verVect, c_syncVect = tnt.SyncFile(k)
+					c_exists, c_verVect, c_syncVect = tnt.SyncFile(srv,k)
 				}
 				if c_exists == true {
 					setMaxVersionVect(fst[path].VerVect, c_verVect)
@@ -350,7 +351,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 				}
 			}
 		}
-		//fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
+		fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
 		setVersionVect(fst[path].VerVect, reply.VerVect)
 		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect

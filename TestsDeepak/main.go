@@ -6,7 +6,7 @@ import (
   //"log"
   "os"
   "strconv"
-  "TnT_v2"
+  "TnT_v2_1"
   "path/filepath"
 )
 
@@ -25,7 +25,7 @@ func port(tag string, host int) string {
   return s
 }
 
-func cleanup(tnts []*TnT_v2.TnTServer) {
+func cleanup(tnts []*TnT_v2_1.TnTServer) {
   for i:=0; i < len(tnts); i++ {
     tnts[i].Kill()
   }
@@ -91,10 +91,10 @@ func print_tree(nservers int) {
     */
 }
 
-func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
+func setup(tag string, nservers int) ([]*TnT_v2_1.TnTServer, func()) {
 
 	var peers []string = make([]string, nservers)
-	var tnts []*TnT_v2.TnTServer = make([]*TnT_v2.TnTServer, nservers)
+	var tnts []*TnT_v2_1.TnTServer = make([]*TnT_v2_1.TnTServer, nservers)
 
 	for i:=0; i<nservers; i++ {
 		peers[i] = port(tag, i)
@@ -102,7 +102,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
 
 	for i:=0; i<nservers; i++ {
 		//tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
-		tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+		tnts[i]=TnT_v2_1.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 	}
 
 	clean := func() { (cleanup(tnts)) }
