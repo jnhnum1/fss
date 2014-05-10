@@ -132,7 +132,7 @@ func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
         if(fi.IsDir == true && name != "./"){
             new_name := strings.TrimPrefix(strings.TrimSuffix(name, "/"), "./")
 
-            fmt.Println("in fst_set_watch",dirname, name, tnt.root+new_name)
+            //fmt.Println("in fst_set_watch",dirname, name, tnt.root+new_name)
             err := watcher.Watch(tnt.root+new_name)
             if err != nil {
                 log.Fatal(err)
@@ -180,7 +180,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     // 1) Create a file/folder - add it to tree
                     //Folder only command is IN_CREATE with name as path
                     if(ev.Mask == IN_CREATE_ISDIR && tnt.Tree.MyTree[key_path] == nil){
-                        fmt.Println("new folder", key_path, ev.Name, fi)
+                        fmt.Println("new folder", ev.Name)
                         err := watcher.Watch(ev.Name)
                         if err != nil {
                             log.Fatal(err)
