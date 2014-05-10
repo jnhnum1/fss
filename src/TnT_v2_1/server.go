@@ -97,7 +97,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	reachable from the root. It is fine if stuff under 'path' are not in FST already.
 	*/
 
-	//fmt.Println(tnt.me, "UPDATE TREE:", path)
+	fmt.Println(tnt.me, "UPDATE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	fi, err := os.Lstat(tnt.root + path)
@@ -229,14 +229,16 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 
 	_, exists := fst[path]
 	action := DO_NOTHING
-	choice := -1
+	//choice := -1 // since there is never a conflict on a directory now!
 	if reply.Exists == false && exists == true {
 		if reply.SyncVect[fst[path].Creator] < fst[path].CreationTime {
 			action = SYNC_DOWN
 		} else if mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect); mB_vs_sA == LESSER || mB_vs_sA == EQUAL {
 			action = DELETE
 		} else {
-			// Delete-Update conflict
+			// Delete-Update conflict resolved as SYNC_DOWN
+			action = SYNC_DOWN
+			/*
 			fmt.Println("Delete-Update conflict on", path, ":", srv, "has deleted, but", tnt.me, "has updated")
 			for choice != tnt.me && choice != srv {
 				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
@@ -247,6 +249,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			} else {
 				action = DELETE
 			}
+			*/
 		}
 	} else if reply.Exists == true && exists == false {
 		live_ancestor := tnt.LiveAncestor(path)
@@ -257,7 +260,9 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		} else if fst[live_ancestor].SyncVect[reply.Creator] < reply.CreationTime {
 			action = UPDATE
 		} else {
-			// Update-Delete conflict
+			// Update-Delete conflict: resolved as UPDATE
+			action = UPDATE
+			/*
 			fmt.Println("Update-Delete conflict on", path, ":", srv, "has updated, but", tnt.me, "has deleted")
 			for choice != tnt.me && choice != srv {
 				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
@@ -268,6 +273,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			} else {
 				action = UPDATE
 			}
+			*/
 		}
 	} else /* reply.Exists == true && exists == true */ {
 		mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
@@ -414,7 +420,9 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 		} else if mB_vs_sA := compareVersionVects(fst[path].VerVect, reply.SyncVect); mB_vs_sA == LESSER || mB_vs_sA == EQUAL {
 			action = DELETE
 		} else {
-			// Delete-Update conflict
+			// Delete-Update conflict: resolved as DO_NOTHING
+			action = DO_NOTHING
+			/*
 			fmt.Println("Delete-Update conflict on", path, ":", srv, "has deleted, but", tnt.me, "has updated")
 			for choice != tnt.me && choice != srv {
 				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
@@ -425,6 +433,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 			} else {
 				action = DELETE
 			}
+			*/
 		}
 	} else if reply.Exists == true && exists == false {
 		live_ancestor := tnt.LiveAncestor(path)
@@ -435,7 +444,9 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 		} else if fst[live_ancestor].SyncVect[reply.Creator] < reply.CreationTime {
 			action = UPDATE
 		} else {
-			// Update-Delete conflict
+			// Update-Delete conflict: resolved as UPDATE
+			action = UPDATE
+			/*
 			fmt.Println("Update-Delete conflict on", path, ":", srv, "has updated, but", tnt.me, "has deleted")
 			for choice != tnt.me && choice != srv {
 				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
@@ -446,6 +457,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 			} else {
 				action = UPDATE
 			}
+			*/
 		}
 	} else /* reply.Exists == true && exists == true */ {
 		mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)

@@ -27,6 +27,32 @@ const (
   	IN_CLOSE_ISDIR = 0x40000010
 )
 
+func DFT(dirname string, depth int) {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+            spaces(depth)
+            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
+        }
+        if fi.IsDir() {
+            spaces(depth)
+            //fmt.Println(fi.Name(), ":")
+            fmt.Println(fi.Name()+string(filepath.Separator), ":", fi.ModTime())
+            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+        }
+    }
+}
+
 type GetVersionArgs struct{
 	Path string
 }

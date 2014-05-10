@@ -113,11 +113,11 @@ func setup(tag string, nservers int) ([]*TnT_v2_1.TnTServer, func()) {
 	for i:=0; i<nservers; i++ {
 		//tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
 
-        os.RemoveAll(common_root+strconv.Itoa(i)+"/")
-        os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
-        os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
+        //os.RemoveAll(common_root+strconv.Itoa(i)+"/")
+        //os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
+        //os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
 
-		tnts[i]=TnT_v2_1.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+		tnts[i]=TnT_v2_1.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 	}
 
 	clean := func() { (cleanup(tnts)) }
@@ -132,7 +132,7 @@ func main() {
 	tnts, clean := setup("sync", nservers)
 	defer clean()
 
-	fmt.Println("Test: Single File Syncing ...")
+	fmt.Println("Test: File System Syncing ...")
 
 	fmt.Println("Enter -1 to quit the loop")
 	a := 100
