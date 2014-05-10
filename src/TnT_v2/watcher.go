@@ -168,7 +168,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~")){                
                     //fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
                     fmt.Println("ev.Name: ", ev.Name)
-                    fi, err := os.Lstat(ev.Name)
+                    fi, _ := os.Lstat(ev.Name)
                     //trim_name := strings.TrimPrefix(ev.Name, tnt.root)
 
                     //fmt.Println("did the files open?", dirname, tnt.root, ev.Name, fi, err)
@@ -179,9 +179,12 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         fmt.Println("new folder", ev.Name)
                         err := watcher.Watch(ev.Name)
                         if err != nil {
+                            fmt.Println("error", ev.Name)
                             log.Fatal(err)
                         }
-                        
+
+                        fmt.Println("I am here")
+
                         tnt.Tree.MyTree[ev.Name] = new(FSnode)
                         tnt.Tree.MyTree[ev.Name].Name = fi.Name()
                         tnt.Tree.MyTree[ev.Name].Size = fi.Size()
@@ -202,6 +205,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.LogicalTime
                         tnt.Tree.MyTree[ev.Name].Parent = tnt.LiveAncestor(ev.Name)                      
 
+                        fmt.Println("do I get here?")
                         fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
                         
                     }
