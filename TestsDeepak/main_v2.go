@@ -156,7 +156,6 @@ func main() {
 
   	//Check that file is in nest1, Open throws error is file does not exist
   	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
-  	fmt.Println(err)
   	if err != nil {
   		fmt.Println("File Transfer Failed")
   		os.Exit(1)
@@ -171,7 +170,6 @@ func main() {
   	tnts[2].SyncWrapper(0,"./")
 
   	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
-  	fmt.Println(err)
   	if err != nil {
   		fmt.Println("Folder Transfer Failed")
   		os.Exit(1)

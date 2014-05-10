@@ -167,7 +167,8 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~")){                
                     //fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
-
+                    fmt.Println("ev.Name: ", ev.Name)
+                    //fi, err := os.Lstat(tnt.root + ev.Name)
                 
                     // 1) Create a file/folder - add it to tree
                     //Folder only command is IN_CREATE with name as path
@@ -177,15 +178,26 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         if err != nil {
                             log.Fatal(err)
                         }
-                        /*child_name := ev.Name + "/"
-                        tnt.Tree.MyTree[child_name] = new(FSnode)
-                        tnt.Tree.MyTree[child_name].IsDir = true
-                        tnt.Tree.MyTree[child_name].VerVect = make(map[int]int)
-                        tnt.Tree.MyTree[child_name].VerVect[tnt.me] = 1
-                        tnt.Tree.MyTree[child_name].SyncVect = make(map[int]int)
-                        tnt.Tree.MyTree[child_name].SyncVect[tnt.me] = 1
-                        tnt.Tree.MyTree[child_name].Parent = tnt.FST_find_parent(dirname, ev)
-                        tnt.Tree.MyTree[tnt.Tree.MyTree[child_name].Parent].Children[ev.Name] = true
+                        /*
+                        fst[path] = new(FSnode)
+                        fst[path].Name = fi.Name()
+                        fst[path].Size = fi.Size()
+                        fst[path].IsDir = fi.IsDir()
+                        fst[path].LastModTime = fi.ModTime()
+                        fst[path].Creator = tnt.me
+                        fst[path].CreationTime = tnt.Tree.LogicalTime
+
+                        fst[path].Children = make(map[string]bool)
+
+                        fst[path].VerVect = make(map[int]int64)
+                        fst[path].SyncVect = make(map[int]int64)
+                        for i:=0; i<len(tnt.servers); i++ {
+                            fst[path].VerVect[i] = 0
+                            fst[path].SyncVect[i] = 0
+                        }
+
+                        fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+
                         fmt.Println("parent is ", tnt.Tree.MyTree[child_name].Parent)
                         */
                     }
