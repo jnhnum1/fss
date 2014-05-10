@@ -123,7 +123,7 @@ func main() {
   
   	fmt.Println("Test: Single File Syncing ...")
 
-  	/*
+  	
   	fmt.Println("Enter -1 to quit the loop")
   	a := 100
   	b := 100
@@ -142,8 +142,9 @@ func main() {
 
     	fmt.Println("-----------------------------")
   	}
-  	*/
+  	
 
+  	/*
   	var test_count int = 0
   	fmt.Println("Test: Sync File ...")	
 
@@ -174,6 +175,7 @@ func main() {
   		fmt.Println("Folder Transfer Failed")
   		os.Exit(1)
   	}
+  	*/
 
 }
 
