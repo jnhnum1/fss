@@ -184,7 +184,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         }
 
                         fmt.Println("I am here")
-                        
+
                         tnt.Tree.MyTree[ev.Name] = new(FSnode)
                         tnt.Tree.MyTree[ev.Name].Name = fi.Name()
                         tnt.Tree.MyTree[ev.Name].Size = fi.Size()
@@ -205,6 +205,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.LogicalTime
                         tnt.Tree.MyTree[ev.Name].Parent = tnt.LiveAncestor(ev.Name)                      
 
+                        fmt.Println("do I get here?")
                         fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
                         
                     }
