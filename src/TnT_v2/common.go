@@ -1,5 +1,4 @@
 package TnT_v2
-
 import (
 	"fmt"
 	"net/rpc"
@@ -12,19 +11,19 @@ const (
 	LESSER = 1
 	GREATER = 2
 	INCOMPARABLE = 3
-
-	//These constants are for recognizing events
-	IN_ATTRIB = 0x4
-  	IN_CLOSE = 0x8
-  	IN_CREATE = 0x100
-	IN_CREATE_ISDIR = 0x40000100
-  	IN_DELETE = 0x200
-  	IN_DELETE_ISDIR = 0x40000200
-  	IN_IGNORED = 0x8000
-  	IN_MODIFY = 0x2
-  	IN_MOVE_FROM = 0x40
-  	IN_MOVE_TO = 0x80
-  	IN_OPEN = 0x20
+	  IN_ATTRIB = 0x4
+  IN_CLOSE = 0x8
+  IN_CREATE = 0x100
+  IN_CREATE_ISDIR = 0x40000100
+  IN_DELETE = 0x200
+  IN_DELETE_ISDIR = 0x40000200
+  IN_IGNORED = 0x8000
+  IN_MODIFY = 0x2
+  IN_MOVE_FROM = 0x40
+  IN_MOVE_TO = 0x80
+  IN_OPEN = 0x20
+  IN_OPEN_ISDIR = 0x40000020
+  IN_CLOSE_ISDIR = 0x40000010
 )
 
 type GetVersionArgs struct{
@@ -115,6 +114,19 @@ func setMinVersionVect(hA map[int]int64, hB map[int]int64) {
 			hA[k] = v
 		}
 	}
+}
+
+func MaxVersionVect(hA map[int]int64, hB map[int]int64) map[int]int64 {
+	/* For all k, sets hA[k] = max(hA[k], hB[k]) */
+	hC := make(map[int]int64)
+	for k, v := range hB {
+		if hA[k] < v {
+			hC[k] = v
+		} else {
+			hC[k] = hA[k]
+		}
+	}
+	return hC
 }
 
 func parent(path string) string {
