@@ -119,20 +119,21 @@ func ReadFromDisk(dirname string, tnt *TnTServer) FStree {
 
 //This function sets watch on folders in directory
 func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
-    //fmt.Println("in fst_set_watch")
+    
     new_dirname := strings.TrimSuffix(dirname, "/")
 
     err := watcher.Watch(new_dirname)
-
+    //fmt.Println("in fst_set_watch", dirname, new_dirname)
     if err != nil {
         log.Fatal(err)
     }
     //fmt.Println(dirname)
     for name, fi := range tnt.Tree.MyTree {
-        if(fi.IsDir == true){
-            new_name := strings.TrimSuffix(name, "/")
-            //fmt.Println(new_name)
-            err := watcher.Watch(new_name)
+        if(fi.IsDir == true && name != "./"){
+            new_name := strings.TrimPrefix(strings.TrimSuffix(name, "/"), "./")
+
+            fmt.Println("in fst_set_watch",dirname, name, tnt.root+new_name)
+            err := watcher.Watch(tnt.root+new_name)
             if err != nil {
                 log.Fatal(err)
             }
@@ -159,60 +160,57 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
     var seq_count int = 0 //This is for creation and mods from text editors
     var mod_count int = 0 //This is for tracking modifications
     var move_count int = 0
+    var old_path string
     for {
         select {
             case ev := <-watcher.Event:
                 
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
-                if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~")){                
+                if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream")){                
                     //fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
-                    fmt.Println("ev.Name: ", ev.Name)
+                    //fmt.Println("ev.Name: ", ev.Name)
                     fi, _ := os.Lstat(ev.Name)
+                    key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
+                    //fmt.Println("./"+key_path)
                     //trim_name := strings.TrimPrefix(ev.Name, tnt.root)
 
                     //fmt.Println("did the files open?", dirname, tnt.root, ev.Name, fi, err)
                 
                     // 1) Create a file/folder - add it to tree
                     //Folder only command is IN_CREATE with name as path
-                    if(ev.Mask == IN_CREATE_ISDIR){
-                        fmt.Println("new folder", ev.Name)
+                    if(ev.Mask == IN_CREATE_ISDIR && tnt.Tree.MyTree[key_path] == nil){
+                        fmt.Println("new folder", key_path, ev.Name, fi)
                         err := watcher.Watch(ev.Name)
                         if err != nil {
-                            fmt.Println("error", ev.Name)
                             log.Fatal(err)
                         }
 
-                        fmt.Println("I am here")
+                        tnt.Tree.MyTree[key_path] = new(FSnode)
+                        tnt.Tree.MyTree[key_path].Name = fi.Name()
+                        tnt.Tree.MyTree[key_path].Size = fi.Size()
+                        tnt.Tree.MyTree[key_path].IsDir = fi.IsDir()
+                        tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                        tnt.Tree.MyTree[key_path].Creator = tnt.me
+                        tnt.Tree.MyTree[key_path].CreationTime = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].Children = make(map[string]bool)
 
-                        tnt.Tree.MyTree[ev.Name] = new(FSnode)
-                        tnt.Tree.MyTree[ev.Name].Name = fi.Name()
-                        tnt.Tree.MyTree[ev.Name].Size = fi.Size()
-                        tnt.Tree.MyTree[ev.Name].IsDir = fi.IsDir()
-                        tnt.Tree.MyTree[ev.Name].LastModTime = fi.ModTime()
-                        tnt.Tree.MyTree[ev.Name].Creator = tnt.me
-                        tnt.Tree.MyTree[ev.Name].CreationTime = tnt.Tree.LogicalTime
-
-                        tnt.Tree.MyTree[ev.Name].Children = make(map[string]bool)
-
-                        tnt.Tree.MyTree[ev.Name].VerVect = make(map[int]int64)
-                        tnt.Tree.MyTree[ev.Name].SyncVect = make(map[int]int64)
+                        tnt.Tree.MyTree[key_path].VerVect = make(map[int]int64)
+                        tnt.Tree.MyTree[key_path].SyncVect = make(map[int]int64)
                         for i:=0; i<len(tnt.servers); i++ {
-                            tnt.Tree.MyTree[ev.Name].VerVect[i] = 0
-                            tnt.Tree.MyTree[ev.Name].SyncVect[i] = 0
+                            tnt.Tree.MyTree[key_path].VerVect[i] = 0
+                            tnt.Tree.MyTree[key_path].SyncVect[i] = 0
                         }
+                        tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].Parent = parent(ev.Name)                      
 
-                        tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.LogicalTime
-                        tnt.Tree.MyTree[ev.Name].Parent = tnt.LiveAncestor(ev.Name)                      
-
-                        fmt.Println("do I get here?")
-                        fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
+                        //fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
                         
                     }
 
                     //This is the sequence of commands when a file is created or modified in a text editor
                     //fmt.Println(seq_count)
-                    if(ev.Mask == IN_CREATE && seq_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
+                    if(ev.Mask == IN_CREATE && seq_count == 0 && !strings.Contains(ev.Name,"/tmp")){
                         cur_file = ev.Name
                         seq_count = 1
                     }else if(ev.Mask == IN_OPEN && seq_count == 1){
@@ -223,15 +221,30 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         seq_count = 3
                     }else if(ev.Mask == IN_CLOSE && cur_file == ev.Name && seq_count == 3){
                         seq_count = 0
-                        if(tnt.Tree.MyTree[ev.Name] == nil){
+                        if(tnt.Tree.MyTree[key_path] == nil){
                             fmt.Println("new file was created", ev.Name)
+                            tnt.Tree.MyTree[key_path] = new(FSnode)
+                            tnt.Tree.MyTree[key_path].Name = fi.Name()
+                            tnt.Tree.MyTree[key_path].Size = fi.Size()
+                            tnt.Tree.MyTree[key_path].IsDir = fi.IsDir()
+                            tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                            tnt.Tree.MyTree[key_path].Creator = tnt.me
+                            tnt.Tree.MyTree[key_path].CreationTime = tnt.Tree.LogicalTime
+
+                            tnt.Tree.MyTree[key_path].VerVect = make(map[int]int64)
+                            tnt.Tree.MyTree[key_path].SyncVect = make(map[int]int64)
+                            for i:=0; i<len(tnt.servers); i++ {
+                                tnt.Tree.MyTree[key_path].VerVect[i] = 0
+                                tnt.Tree.MyTree[key_path].SyncVect[i] = 0
+                            }
+                            tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.Tree.MyTree[key_path].Parent = parent(ev.Name)                 
 
                         }else{
                             // 2) Modify a file - increment its modified vector by 1
-                            fmt.Println("file has been modified", ev.Name)
-                            if(tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] < tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]){
-                                //tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]++
-                                //tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]
+                            fmt.Println("file has been modified", key_path)
+                            if(tnt.Tree.MyTree[key_path].VerVect[tnt.me] < tnt.Tree.MyTree[key_path].SyncVect[tnt.me]){
+
                             }
                         }
                     }else {
@@ -239,7 +252,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }
 
                     //This is the events that occur when files modified from the command line
-                    if(ev.Mask == IN_MODIFY && mod_count == 0 && !strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp")){
+                    if(ev.Mask == IN_MODIFY && mod_count == 0 && !strings.Contains(ev.Name,"/tmp")){
                         cur_file = ev.Name
                         mod_count = 1
                     }else if(ev.Mask == IN_OPEN && mod_count == 1){
@@ -262,34 +275,40 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     // 3) Delete a file - indicate it has been removed, don't necessarily remove it from tree
                     if(ev.Mask == IN_DELETE && tnt.Tree.MyTree[ev.Name] != nil){
                         fmt.Println("file has been deleted", ev.Name)
-                        if(tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] < tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]){
-                            //tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]++
-                            //tnt.Tree.MyTree[ev.Name].VerVect[tnt.me] = tnt.Tree.MyTree[ev.Name].SyncVect[tnt.me]
-                            //tnt.Tree.MyTree[ev.Name].Exists = false
-                            //delete(tnt.Tree.MyTree[tnt.Tree.MyTree[ev.Name].Parent].Children, ev.Name)
-                        }
+                        tnt.DeleteTree(ev.Name)
                     }
                     // 6) Delete a directory, need to parse and remove children as well
                     if(ev.Mask == IN_DELETE_ISDIR){
                         fmt.Println("folder has been deleted", ev.Name)
+                        tnt.DeleteTree(ev.Name)
                     }
 
                     // 5) Do nothing when transferring files from tmp/ to the rest of the directory
-                    //fmt.Println(ev.Name,"/home/zek/fss/roots/root0/tmp", move_count)
-                    if(ev.Mask == IN_MOVE_FROM && strings.Contains(ev.Name,"/home/zek/fss/roots/root0/tmp") && move_count == 0){
-                        //fmt.Println("in here")
-                        //This is when a file is moved into the tmp folder to be transferred out
+                    //fmt.Println(ev, move_count)
+                    
+                    if(ev.Mask == IN_MOVE_FROM && move_count == 0){
+                        fmt.Println("This is a move")
+                        old_path = ev.Name
+
                         move_count = 1
-                    }else if( move_count == 1){
-                        fmt.Println("file has been changed through sync, do nothing")
+                    }else if( ev.Mask == IN_MOVE_TO && move_count == 1){
+                        fmt.Println("file has been moved", old_path)
+
+                        if(strings.Contains(old_path,"/tmp")){
+                            fmt.Println("Moved thru transfer, do nothing")
+                        }else{
+                            fmt.Println("Actual Move, do something")
+                        }
+
                         move_count = 0
-                    }else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[ev.Name] == nil){
-                        //This is when a file has been moved from a non-watched directory into
-                        //our directory.  Treat as if new file were created
-                        fmt.Println("new file was moved into directory")
-                    }//else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[ev.Name] == false){
-                        //File has previously been created, but then deleted, treat as new file?
-                    //}
+                    }else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[key_path] != nil && move_count == 0){
+                        //This is when a file has been modified
+                        fmt.Println("file has been modified")
+                    }else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[key_path] == nil && move_count == 0) {
+                        fmt.Println("file has been moved from outside directory")
+                    }else{
+                        move_count = 0
+                    }
                     
                 }
 
