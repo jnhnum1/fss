@@ -11,112 +11,6 @@ import (
     //"encoding/gob"
 )
 
-/*
-func file_watcher() {
-  
-  watcher, err := inotify.NewWatcher()
-  if err != nil {
-    log.Fatal(err)
-  }
-  err = watcher.Watch("./watch_folder")
-  if err != nil {
-    log.Fatal(err)
-  }
-  err = watcher.Watch("./watch_folder/nest1")
-  if err != nil {
-    log.Fatal(err)
-  }
-  
-  for {
-    select {
-    case ev := <-watcher.Event:
-        log.Println("event:", ev)
-    case err := <-watcher.Error:
-        log.Println("error:", err)
-    }
-  }
-}
-
-
-//Creates FST_Watch with data on every file in the seached folder which gets used by FST_parse_watch below
-func (tnt *TnTServer) FST_create(dirname string, depth int) {
-    fmt.Println("in fst_create")
-    d, err := os.Open(dirname)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    defer d.Close()
-    fi, err := d.Readdir(-1)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }    
-
-    for _, fi := range fi {
-        //spaces(depth)
-        var child_name string
-        if (!strings.Contains(fi.Name(),"~")) {
-            if(fi.IsDir()){
-                child_name = dirname+fi.Name() + "/"
-                fmt.Println(child_name)
-            }else {
-                child_name = dirname+fi.Name()
-            }
-            if(tnt.Tree.MyTree[child_name] == nil){
-                fmt.Println(child_name)
-                tnt.Tree.MyTree[child_name] = new(FSnode)
-                tnt.Tree.MyTree[child_name].Name = fi.Name()
-                tnt.Tree.MyTree[child_name].Size = fi.Size()
-                tnt.Tree.MyTree[child_name].LastModTime = fi.ModTime()
-                tnt.Tree.MyTree[child_name].IsDir = fi.IsDir()
-                tnt.Tree.MyTree[child_name].Depth = depth+1
-                tnt.Tree.MyTree[child_name].VerVect = make(map[int]int)
-                tnt.Tree.MyTree[child_name].VerVect[tnt.me] = 1
-                tnt.Tree.MyTree[child_name].SyncVect = make(map[int]int)
-                tnt.Tree.MyTree[child_name].SyncVect[tnt.me] = 1
-                tnt.Tree.MyTree[child_name].Parent = dirname
-                tnt.Tree.MyTree[child_name].Exists = true
-                tnt.Tree.MyTree[dirname].Children[child_name] = true
-                if fi.IsDir() {
-                    tnt.Tree.MyTree[child_name].Children = make(map[string]bool)
-                    tnt.FST_create(child_name, depth+1)
-                }
-            }
-        }
-
-    }
-}
-
-func WritetoDisk(dirname string, tnt *TnTServer) error {
-    f, err := os.OpenFile(dirname+"FST_watch", os.O_WRONLY | os.O_CREATE, 0777)
-    if err != nil {
-        log.Println("Error opening file:", err)
-    }
-
-    encoder := gob.NewEncoder(f)
-    encoder.Encode(tnt)
-    f.Close()
-    fmt.Println("FST_watch dumped!")
-    return nil
-}
-
-func ReadFromDisk(dirname string, tnt *TnTServer) FStree {
-    //Test the watch here
-    fmt.Println(dirname)
-    f, err := os.Open(dirname+"FST_watch")
-    if err != nil {
-        log.Println("Error opening file:", err)
-    }
-    var fst1 FStree
-    decoder := gob.NewDecoder(f)
-    decoder.Decode(&fst1)
-
-    f.Close()
-     return fst1
-}
-*/
-
 //This function sets watch on folders in directory
 func (tnt *TnTServer) FST_set_watch(dirname string, watcher *inotify.Watcher) {
     
@@ -186,6 +80,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                             log.Fatal(err)
                         }
 
+                        tnt.Tree.LogicalTime++
                         tnt.Tree.MyTree[key_path] = new(FSnode)
                         tnt.Tree.MyTree[key_path].Name = fi.Name()
                         tnt.Tree.MyTree[key_path].Size = fi.Size()
@@ -202,6 +97,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                             tnt.Tree.MyTree[key_path].SyncVect[i] = 0
                         }
                         tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
                         tnt.Tree.MyTree[key_path].Parent = parent(ev.Name)                      
 
                         //fmt.Println("parent is ", tnt.Tree.MyTree[ev.Name].Parent)
@@ -223,6 +119,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         seq_count = 0
                         if(tnt.Tree.MyTree[key_path] == nil){
                             fmt.Println("new file was created", ev.Name)
+                            tnt.Tree.LogicalTime++
                             tnt.Tree.MyTree[key_path] = new(FSnode)
                             tnt.Tree.MyTree[key_path].Name = fi.Name()
                             tnt.Tree.MyTree[key_path].Size = fi.Size()
@@ -238,14 +135,18 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                                 tnt.Tree.MyTree[key_path].SyncVect[i] = 0
                             }
                             tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
                             tnt.Tree.MyTree[key_path].Parent = parent(ev.Name)                 
 
                         }else{
                             // 2) Modify a file - increment its modified vector by 1
                             fmt.Println("file has been modified", key_path)
-                            if(tnt.Tree.MyTree[key_path].VerVect[tnt.me] < tnt.Tree.MyTree[key_path].SyncVect[tnt.me]){
+                            tnt.Tree.LogicalTime++
+                            tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                            tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.PropagateUp(tnt.Tree.MyTree[key_path].VerVect,tnt.Tree.MyTree[key_path].SyncVect,tnt.Tree.MyTree[key_path].Parent)
 
-                            }
                         }
                     }else {
                         seq_count = 0
@@ -266,6 +167,12 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
                         // 2) Modify a file - increment its modified vector by 1
                         fmt.Println("file has been modified", ev.Name)
+                            tnt.Tree.LogicalTime++
+                            tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                            tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                            tnt.PropagateUp(tnt.Tree.MyTree[key_path].VerVect,tnt.Tree.MyTree[key_path].SyncVect,tnt.Tree.MyTree[key_path].Parent)
+
                     }else {
                         mod_count = 0
                     }
@@ -273,13 +180,25 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
 
                     // 3) Delete a file - indicate it has been removed, don't necessarily remove it from tree
-                    if(ev.Mask == IN_DELETE && tnt.Tree.MyTree[ev.Name] != nil){
+                    if(ev.Mask == IN_DELETE && tnt.Tree.MyTree[key_path] != nil){
                         fmt.Println("file has been deleted", ev.Name)
+                        tnt.Tree.LogicalTime++
+
+                        tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.PropagateUp(tnt.Tree.MyTree[key_path].VerVect,tnt.Tree.MyTree[key_path].SyncVect,tnt.Tree.MyTree[key_path].Parent)
+
                         tnt.DeleteTree(ev.Name)
                     }
                     // 6) Delete a directory, need to parse and remove children as well
-                    if(ev.Mask == IN_DELETE_ISDIR){
+                    if(ev.Mask == IN_DELETE_ISDIR && tnt.Tree.MyTree[key_path] != nil){
                         fmt.Println("folder has been deleted", ev.Name)
+                        tnt.Tree.LogicalTime++
+
+                        tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.PropagateUp(tnt.Tree.MyTree[key_path].VerVect,tnt.Tree.MyTree[key_path].SyncVect,tnt.Tree.MyTree[key_path].Parent)
+
                         tnt.DeleteTree(ev.Name)
                     }
 
@@ -304,8 +223,33 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     }else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[key_path] != nil && move_count == 0){
                         //This is when a file has been modified
                         fmt.Println("file has been modified")
+                        tnt.Tree.LogicalTime++
+                        tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                        tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.PropagateUp(tnt.Tree.MyTree[key_path].VerVect,tnt.Tree.MyTree[key_path].SyncVect,tnt.Tree.MyTree[key_path].Parent)
+
                     }else if(ev.Mask == IN_MOVE_TO && tnt.Tree.MyTree[key_path] == nil && move_count == 0) {
-                        fmt.Println("file has been moved from outside directory")
+                        fmt.Println("file has been moved from outside directory, treat like new file")
+                        tnt.Tree.LogicalTime++
+                        tnt.Tree.MyTree[key_path] = new(FSnode)
+                        tnt.Tree.MyTree[key_path].Name = fi.Name()
+                        tnt.Tree.MyTree[key_path].Size = fi.Size()
+                        tnt.Tree.MyTree[key_path].IsDir = fi.IsDir()
+                        tnt.Tree.MyTree[key_path].LastModTime = fi.ModTime()
+                        tnt.Tree.MyTree[key_path].Creator = tnt.me
+                        tnt.Tree.MyTree[key_path].CreationTime = tnt.Tree.LogicalTime
+
+                        tnt.Tree.MyTree[key_path].VerVect = make(map[int]int64)
+                        tnt.Tree.MyTree[key_path].SyncVect = make(map[int]int64)
+                        for i:=0; i<len(tnt.servers); i++ {
+                            tnt.Tree.MyTree[key_path].VerVect[i] = 0
+                            tnt.Tree.MyTree[key_path].SyncVect[i] = 0
+                        }
+                        tnt.Tree.MyTree[key_path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+                        tnt.Tree.MyTree[key_path].Parent = parent(ev.Name)
+
                     }else{
                         move_count = 0
                     }
@@ -318,31 +262,3 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
     }
 }
 
-/*
-//This function is used to recursively parse the tree to find the file that set off an event in FST_watch_files
-//And return its node in the tree
-func (tnt *TnTServer) FST_find_parent(dirname string, ev *inotify.Event) string {
-    var parent_folder string
-
-    new_name := strings.TrimPrefix(ev.Name, dirname)
-    fmt.Println("in FST_find_parent", dirname, ev.Name, strings.Contains(new_name, "/"))
-    if(!strings.Contains(new_name, "/")){
-        parent_folder = dirname
-        //fmt.Println("found it", parent_folder)
-    }else {
-        //fmt.Println("not there yet")
-        for child, _ := range tnt.Tree.MyTree {
-            fmt.Println(child, strings.Contains(child,dirname))
-            if (tnt.Tree.MyTree[child].IsDir && strings.Contains(child,dirname) && child != dirname) {
-                parent_folder = ""
-                parent_folder = tnt.FST_find_parent(child, ev)
-                if(parent_folder != ""){
-                    break
-                }
-            }
-        }
-    }
-    //fmt.Println("do i return again?", parent_folder)
-    return parent_folder
-}
-*/
