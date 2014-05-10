@@ -291,7 +291,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		exists = false
 	} else if action == UPDATE {
 		if exists == false {
-			tnt.CopyFileFromPeer(srv, path, path, true)
+			tnt.CopyFileFromPeer(srv, path, path)
 			// set tnt.LastModTime
 			fi, err := os.Lstat(tnt.root + path)
 			if err != nil {
@@ -485,7 +485,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 	} else if action == UPDATE {
 		fmt.Println("ACTION:", tnt.me, "is getting file from", srv)
 		// get file
-		tnt.CopyFileFromPeer(srv, path, path, false)
+		tnt.CopyDirFromPeer(srv, path, path)
 		// set tnt.LastModTime
 		fi, err := os.Lstat(tnt.root + path)
 		if err != nil {

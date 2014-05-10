@@ -120,42 +120,43 @@ func (tnt *TnTServer) GetDir(args *GetDirArgs, reply *GetDirReply) error {
   return nil
 }
 
-func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string, isDir bool) error {
-	//Handle the directory case  
-	if isDir {
-		args := &GetDirArgs{Path:path}
-		var reply GetDirReply
-		ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
-		if ok {
-			if reply.Err != nil {
-				log.Println(tnt.me, ": Error opening Directory:", reply.Err)
-			} else {
-				err := os.Mkdir(tnt.root + dest, reply.Perm)
-				if err != nil {
-					log.Println(tnt.me, ": Error writing file:", err)
-				}
-			}
-		} else {
-			log.Println(tnt.me, ": GetDir RPC failed")
-		}
-		return reply.Err
-	} else {
-		args := &GetFileArgs{FilePath:path}
-		var reply GetFileReply
+func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) error {
 
-		ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
-		if ok {
-			if reply.Err != nil {
-				log.Println(tnt.me, ": Error opening file:", reply.Err)
-			} else {
-				err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
-				if err != nil {
-					log.Println(tnt.me, ": Error writing file:", err)
-				}
-			}
+	args := &GetDirArgs{Path:path}
+	var reply GetDirReply
+	ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
+	if ok {
+		if reply.Err != nil {
+			log.Println(tnt.me, ": Error opening Directory:", reply.Err)
 		} else {
-			log.Println(tnt.me, ": GetFile RPC failed")
+			err := os.Mkdir(tnt.root + dest, reply.Perm)
+			if err != nil {
+				log.Println(tnt.me, ": Error writing file:", err)
+			}
 		}
-		return reply.Err
+	} else {
+		log.Println(tnt.me, ": GetDir RPC failed")
 	}
+	return reply.Err
+}
+
+func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error {
+
+	args := &GetFileArgs{FilePath:path}
+	var reply GetFileReply
+
+	ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
+	if ok {
+		if reply.Err != nil {
+			log.Println(tnt.me, ": Error opening file:", reply.Err)
+		} else {
+			err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
+			if err != nil {
+				log.Println(tnt.me, ": Error writing file:", err)
+			}
+		}
+	} else {
+		log.Println(tnt.me, ": GetFile RPC failed")
+	}
+	return reply.Err
 }
