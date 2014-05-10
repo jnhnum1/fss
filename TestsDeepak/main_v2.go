@@ -8,6 +8,7 @@ import (
   	"strconv"
   	"TnT_v2"
   	"path/filepath"
+    //"reflect"
 )
 
 const (
@@ -97,17 +98,31 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
   	}
 
   	for i:=0; i<nservers; i++ {
-    //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
-  	tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+        //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
 
-  	fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
+        os.RemoveAll(common_root+strconv.Itoa(i)+"/")
+        os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
+        os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
+  	    tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 
-  	go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
+  	    fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
+
+  	    go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
 
   	}
 
   	clean := func() { (cleanup(tnts)) }
   	return tnts, clean
+}
+
+func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
+
+    for i := 0; i<nservers; i++ {
+        for j := 0; i<nservers; i++ {
+            tnts[i].SyncWrapper(j,"./")
+        }
+    }
+
 }
 
 func main() {
@@ -144,38 +159,41 @@ func main() {
   	}
   	
 
-  	/*
-  	var test_count int = 0
-  	fmt.Println("Test: Sync File ...")	
+  	
+ //  	var test_count int = 0
+ //  	fmt.Println("Test: Sync File ...")	
 
-  	//Create file on nest0
-  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
-  	os.Create(file_name)
+ //  	//Create file on nest0
+ //  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
+ //  	os.Create(file_name)
 
-  	//Sync with nest1
-	tnts[1].SyncWrapper(0,"./")
+ //  	//Sync all servers
+	// SyncAll(nservers, tnts)
 
-  	//Check that file is in nest1, Open throws error is file does not exist
-  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
-  	if err != nil {
-  		fmt.Println("File Transfer Failed")
-  		os.Exit(1)
-  	}
+ //  	//Check that file is in nest1, Open throws error is file does not exist
+ //  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
+ //  	if err != nil {
+ //  		fmt.Println("File Transfer Failed")
+ //  		os.Exit(1)
+ //  	}
 
 
-  	fmt.Println("Test: Sync Folder ...")
-  	test_count++
-  	//Create folder on nest0
-  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
-  	os.Mkdir(folder_name, 0777)
-  	tnts[2].SyncWrapper(0,"./")
+ //  	fmt.Println("Test: Sync Folder ...")
+ //  	test_count++
+ //  	//Create folder on nest0
+ //  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
+ //  	os.Mkdir(folder_name, 0777)
 
-  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
-  	if err != nil {
-  		fmt.Println("Folder Transfer Failed")
-  		os.Exit(1)
-  	}
-  	*/
+ //    SyncAll(nservers, tnts)
+
+ //  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
+ //  	if err != nil {
+ //  		fmt.Println("Folder Transfer Failed")
+ //  		os.Exit(1)
+ //  	}
+
+
+  	
 
 }
 

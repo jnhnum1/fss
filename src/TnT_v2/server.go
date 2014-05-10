@@ -70,7 +70,7 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 func (tnt *TnTServer) DeleteTree(path string) {
 	// Deletes entire sub-tree under 'path' from FStree
 
-	//fmt.Println(tnt.me, "DELETE TREE:", path)
+	fmt.Println(tnt.me, "DELETE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	if _, present := fst[path]; present {
@@ -116,7 +116,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 		fst[path].CreationTime = tnt.Tree.LogicalTime
 
 		if fi.IsDir() {
-			fmt.Println("did i make my children?", path)
+			//fmt.Println("did i make my children?", path)
 			fst[path].Children = make(map[string]bool)
 		}
 
@@ -129,7 +129,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 
 		prt := parent(path)
 		fst[path].Parent = prt
-		fmt.Println("PARENT: ", prt, "PATH: ", path)
+		//fmt.Println("PARENT: ", prt, "PATH: ", path)
 		fst[prt].Children[path] = true
 
 		fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
@@ -299,7 +299,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		tnt.DeleteTree(path)
 		exists = false
 	} else if action == UPDATE {
-		fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv)
+		fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv, exists)
 		if exists == false {
 			tnt.CopyDirFromPeer(srv, path, path)
 			// set tnt.LastModTime

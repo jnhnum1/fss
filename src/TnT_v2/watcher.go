@@ -49,42 +49,47 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
     fst := tnt.Tree.MyTree
 
-    //fmt.Println("in FST_watch_files", dirname)
-    //fmt.Println(fst[dirname])
-    //var cur_file string
-    //var seq_count int = 0 //This is for creation and mods from text editors
-    //var mod_count int = 0 //This is for tracking modifications
-    //var move_count int = 0
-    //var old_path string
-    //var old_path_key string
     for {
         select {
             case ev := <-watcher.Event:
-                fmt.Println("I see event: ", ev)
+                //fmt.Println("I see event: ", ev)
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream") && !strings.Contains(ev.Name,tnt.tmp)){                
                     if(ev.Mask != IN_CLOSE && ev.Mask != IN_OPEN && ev.Mask != IN_OPEN_ISDIR && ev.Mask != IN_CLOSE_ISDIR){
-                    fmt.Println("ev.Name: ", ev.Name)
+                    //fmt.Println("ev.Name: ", ev.Name)
                     fi, err := os.Lstat(ev.Name)
                     key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
 
                     fmt.Println("ev: ", ev, key_path)
 
-                    if ev.Mask != IN_DELETE && ev.Mask != IN_DELETE_ISDIR && err == nil {
+                    if err == nil {
                         if fi.IsDir(){
                             tnt.FST_set_watch(ev.Name, watcher)
                             key_path = key_path + "/"
                         }
+                    } else if fst[key_path + "/"] != nil {
+                        key_path = key_path + "/"
+                    } else if fst[key_path] != nil{
+                        fmt.Println("this is a file")
+                    }else {
+                        fmt.Println("what am i doing", err, fst[key_path])
                     }
-                    tnt.mu.Lock()
-                    tnt.Tree.LogicalTime++
 
-                    tnt.UpdateTree(key_path)
-                    if fst[key_path] != nil {
-                        tnt.PropagateUp(fst[key_path].VerVect,fst[key_path].SyncVect,fst[key_path].Parent)
-                    }
-                    tnt.mu.Unlock()
+                    //fmt.Println("key to update", key_path)
+                    //if(fst[key_path] != nil || err == nil){
+                        tnt.mu.Lock()
+
+                        tnt.Tree.LogicalTime++
+                        tnt.UpdateTree(key_path)
+
+                        if fst[key_path] != nil {
+                            tnt.PropagateUp(fst[key_path].VerVect,fst[key_path].SyncVect,fst[key_path].Parent)
+                        }
+                        tnt.mu.Unlock()
+                    //}   
+
+                    
                     }
                     
                 }
