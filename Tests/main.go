@@ -2,16 +2,16 @@ package main
 
 import (
   //"bufio"
-  //"log"
   "fmt"
-  "io/ioutil"
+  //"log"
   "os"
   "strconv"
-  "TnT_single_v2_1"
+  "TnT_v2_1"
+  "path/filepath"
 )
 
 const (
-  common_root = "../roots/root"
+  common_root = "../roots/nest"
 )
 
 func port(tag string, host int) string {
@@ -25,69 +25,132 @@ func port(tag string, host int) string {
   return s
 }
 
-func cleanup(tnts []*TnT_single_v2_1.TnTServer) {
+func cleanup(tnts []*TnT_v2_1.TnTServer) {
   for i:=0; i < len(tnts); i++ {
     tnts[i].Kill()
   }
 }
 
-func printfiles(nservers int, fname string) {
-  for i:=0; i<nservers; i++ {
-    path := common_root + strconv.Itoa(i) + "/" + fname
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        fmt.Println(path, ": <!>\n")
-    } else {
-        fmt.Println(path, ":", string(data))
-    }
+/*
+func readLines(path string) ([]string, error) {
+  file, err := os.Open(path)
+  if err != nil {
+    return nil, err
   }
+  defer file.Close()
+
+  var lines []string
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    lines = append(lines, scanner.Text())
+  }
+  return lines, scanner.Err()
+}
+*/
+
+func spaces(depth int) {
+	for i:=0; i<depth; i++ {
+		fmt.Printf(" |")
+	}
+	fmt.Printf(" |---- ")
 }
 
-func setup(tag string, nservers int, fname string) ([]*TnT_single_v2_1.TnTServer, func()) {
+func DFT(dirname string, depth int) {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+            spaces(depth)
+            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
+        }
+        if fi.IsDir() {
+            spaces(depth)
+            //fmt.Println(fi.Name(), ":")
+            fmt.Println(fi.Name()+string(filepath.Separator), ":", fi.ModTime())
+            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+        }
+    }
+}
 
-  var peers []string = make([]string, nservers)
-  var tnts []*TnT_single_v2_1.TnTServer = make([]*TnT_single_v2_1.TnTServer, nservers)
+func print_tree(nservers int) {
+	fmt.Println("main : printing tree")
+    DFT("../roots/", 0)
+	/*for i:=0; i<nservers; i++ {
+		path := common_root + strconv.Itoa(i) + "/" 
+		DFT(path,0)
+	}
+    */
+}
 
-  for i:=0; i<nservers; i++ {
-    peers[i] = port(tag, i)
-  }
+func SyncAll(nservers int, tnts []*TnT_v2_1.TnTServer){
 
-  for i:=0; i<nservers; i++ {
-    tnts[i] = TnT_single_v2_1.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
-  }
+    for i := 0; i<nservers; i++ {
+        for j := 0; i<nservers; i++ {
+            tnts[i].SyncWrapper(j,"./")
+        }
+    }
 
-  clean := func() { (cleanup(tnts)) }
-  return tnts, clean
+}
+
+func setup(tag string, nservers int) ([]*TnT_v2_1.TnTServer, func()) {
+
+	var peers []string = make([]string, nservers)
+	var tnts []*TnT_v2_1.TnTServer = make([]*TnT_v2_1.TnTServer, nservers)
+
+	for i:=0; i<nservers; i++ {
+		peers[i] = port(tag, i)
+	}
+
+	for i:=0; i<nservers; i++ {
+		//tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
+
+        os.RemoveAll(common_root+strconv.Itoa(i)+"/")
+        os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
+        os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
+
+		tnts[i]=TnT_v2_1.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+	}
+
+	clean := func() { (cleanup(tnts)) }
+	return tnts, clean
 }
 
 func main() {
 
-  const nservers = 3
-  const fname = "foo.txt"
+	const nservers = 3
+	//printfiles(nservers)
 
-  printfiles(nservers, fname)
+	tnts, clean := setup("sync", nservers)
+	defer clean()
 
-  tnts, clean := setup("sync", nservers, fname)
-  defer clean()
+	fmt.Println("Test: Single File Syncing ...")
 
-  fmt.Println("Test: Single File Syncing ...")
+	fmt.Println("Enter -1 to quit the loop")
+	a := 100
+	b := 100
+	for a >= 0 && b >= 0 {
 
-  fmt.Println("Enter -1 to quit the loop")
-  a := 100
-  b := 100
-  for a >= 0 && b >= 0 {
+		fmt.Printf("Sync? Enter (who) and (from): ")
+		n, err := fmt.Scanf("%d %d\n", &a, &b)
+		if err != nil {
+			fmt.Println("Scanf error:", n, err)
+		}
 
-      fmt.Printf("Sync? Enter (who) and (from): ")
-      n, err := fmt.Scanf("%d %d\n", &a, &b)
-      if err != nil {
-          fmt.Println("Scanf error:", n, err)
-      }
+		if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
+			tnts[a].SyncWrapper(b,"./")
+			print_tree(nservers)
+		}
 
-      if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
-          tnts[a].SyncNow(b)
-          printfiles(nservers, fname)
-      }
-
-      fmt.Println("-----------------------------")
-  }
+		fmt.Println("-----------------------------")
+	}
 }
+
