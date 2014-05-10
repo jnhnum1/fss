@@ -168,7 +168,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream")){                
-                    //fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
+                    fmt.Println("ev: ", ev, "file node: ", tnt.Tree.MyTree[ev.Name])
                     //fmt.Println("ev.Name: ", ev.Name)
                     fi, _ := os.Lstat(ev.Name)
                     key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
