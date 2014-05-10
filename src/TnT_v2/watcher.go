@@ -179,8 +179,11 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                         fmt.Println("new folder", ev.Name)
                         err := watcher.Watch(ev.Name)
                         if err != nil {
+                            fmt.Println("error", ev.Name)
                             log.Fatal(err)
                         }
+
+                        fmt.Println("I am here")
                         
                         tnt.Tree.MyTree[ev.Name] = new(FSnode)
                         tnt.Tree.MyTree[ev.Name].Name = fi.Name()
