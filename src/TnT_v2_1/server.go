@@ -167,7 +167,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 			}
 			tnt.UpdateTree(child)
 			fst[path].Children[child] = true
-			//fst[child].Parent = path
+			//fst[child].Parent = path - the child does it :)
 
 			// Update LastModTime, VerVect and SyncVect for 'dir' :
 
