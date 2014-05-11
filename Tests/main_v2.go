@@ -32,60 +32,27 @@ func cleanup(tnts []*TnT_v2.TnTServer) {
   	}
 }
 
-/*
-func readLines(path string) ([]string, error) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil, err
-  }
-  defer file.Close()
 
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    lines = append(lines, scanner.Text())
-  }
-  return lines, scanner.Err()
-}
-*/
-func spaces(depth int) {
-    for i:=0; i<depth; i++ {
-        fmt.Printf("|")
+func parent(path string) string {
+    /*
+    Gives the path of the parent. For example,
+    (1) "./root/nest/tra/foo" will gives "./root/nest/tra/"
+    (2) "./root/nest/tra/foo/" also gives "./root/nest/tra/"
+    (3) If input does not contain a "/", then it will return ""
+    */
+    if len(path) == 0 {
+        return path
     }
-    fmt.Printf("|- ")
-}
-
-
-func DFT(dirname string, depth int) {
-    d, err := os.Open(dirname)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
+    end := len(path) - 1
+    if path[end] == filepath.Separator {
+        end--
     }
-    defer d.Close()
-    fi, err := d.Readdir(-1)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    for _, fi := range fi {
-        if fi.Mode().IsRegular() {
-            spaces(depth)
-            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
-        }
-        if fi.IsDir() {
-            spaces(depth)
-            //fmt.Println(fi.Name(), ":")
-            fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
-            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+    for ; end >= 0; end-- {
+        if path[end] == filepath.Separator {
+            break
         }
     }
-}
-func printfiles(nservers int) {
-  	for i:=0; i<nservers; i++ {
-    	path := common_root + strconv.Itoa(i) + "/" 
-    	DFT(path,0)
-  	}
+    return path[0:end+1]
 }
 
 func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
