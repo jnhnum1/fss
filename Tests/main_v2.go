@@ -160,7 +160,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         } else if this_action == "Move_Up" {
             fmt.Println("Moving Up")
             if cur_dir != root {
-                cur_dir = parent(cur_dir) + "/"
+                cur_dir = parent(cur_dir)
             }
             
         } else if this_action == "Move_Down" {
