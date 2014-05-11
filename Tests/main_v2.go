@@ -98,7 +98,7 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fmt.Println("Edit Directory ...")
 
-    //rand.Seed(42)
+    rand.Seed( time.Now().UTC().UnixNano())
     action_list := [] string{
         "Create_Dir",
         "Delete_Dir",
@@ -108,6 +108,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         "Move_Up",
         "Move_Down",
     }
+
     cur_dir := root
 
     for i := 0; i<num_actions; i++ {
@@ -199,8 +200,6 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         }
         time.Sleep(10 * time.Millisecond)
     }
-
-
 }
 
 func main() {
@@ -277,6 +276,7 @@ func main() {
     // for {
 
     // }
+
     // for i:=0;i<1;i++{
     //     go EditDirectory(5,tnts[i])
     // }
