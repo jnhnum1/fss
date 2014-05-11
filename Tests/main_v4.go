@@ -91,7 +91,7 @@ func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v2_2.TnTServer, c chan int){
+func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v2_2.TnTServer, c chan int, stop_all chan int){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
@@ -111,7 +111,6 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
     for i := 0; i<num_actions; i++ {
         my_num := rand.Intn(200)
         this_action := action_list[rand.Intn(len(action_list))]
-        // this_action := "Move_Down"
 
         if this_action == "Create_Dir" {
             dir_name := cur_dir+strconv.Itoa(my_num)+"/"
@@ -193,12 +192,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             
         }
         
-        if i%5 == 0 {
-          sync_with := rand.Intn(nservers)
-          if sync_with != me{
-            tnt.SyncWrapper(sync_with,"./")
-          }
-        }
+        
         time.Sleep(100 * time.Millisecond)
     }
     fmt.Println(me, " am done ...")
@@ -277,21 +271,27 @@ func main() {
     // for {
 
     // }
-      
-    c := make(chan int)
-    for i:=0; i<nservers; i++ {
-        go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
-    }
+    var c []chan int  
+    //c := make(chan int)
+    stop_all := make(chan int)
+    for j:=1;j<6;j++{
+      for i:=0; i<nservers; i++ {
+          c[i] = make(chan int)
 
-    done_count := 0
-    for {
-      <- c 
-      done_count++
-      if done_count == nservers{
-        fmt.Println("All are done")
-        break
+          go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
+      }
+      for i:=0;i<nservers;i++{
+          <-c[i]
+      }
+      i:= rand.Intn(nservers)
+      sync_with := rand.Intn(nservers)
+      
+      
+      if sync_with != i{
+        tnt[i].SyncWrapper(sync_with,"./")
       }
     }
+    
     SyncAll(nservers, tnts)
 }
 

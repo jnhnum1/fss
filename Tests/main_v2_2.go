@@ -31,65 +31,7 @@ func cleanup(tnts []*TnT_v2_2.TnTServer) {
   }
 }
 
-/*
-func readLines(path string) ([]string, error) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil, err
-  }
-  defer file.Close()
 
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    lines = append(lines, scanner.Text())
-  }
-  return lines, scanner.Err()
-}
-*/
-
-func spaces(depth int) {
-	for i:=0; i<depth; i++ {
-		fmt.Printf(" |")
-	}
-	fmt.Printf(" |---- ")
-}
-
-func DFT(dirname string, depth int) {
-    d, err := os.Open(dirname)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    defer d.Close()
-    fi, err := d.Readdir(-1)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    for _, fi := range fi {
-        if fi.Mode().IsRegular() {
-            spaces(depth)
-            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
-        }
-        if fi.IsDir() {
-            spaces(depth)
-            //fmt.Println(fi.Name(), ":")
-            fmt.Println(fi.Name()+string(filepath.Separator), ":", fi.ModTime())
-            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
-        }
-    }
-}
-
-func print_tree(nservers int) {
-	fmt.Println("main : printing tree")
-    DFT("../roots/", 0)
-	/*for i:=0; i<nservers; i++ {
-		path := common_root + strconv.Itoa(i) + "/" 
-		DFT(path,0)
-	}
-    */
-}
 
 func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
