@@ -236,7 +236,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
 
 func main() {
 
-  	const nservers = 3
+  	const nservers = 5
 
 
   	//printfiles(nservers)
