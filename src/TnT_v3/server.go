@@ -1,4 +1,4 @@
-package TnT_v2_2
+package TnT_v3
 
 import (
 	"fmt"
@@ -111,6 +111,8 @@ func StartServer(servers []string, me int, root string, dump string, tmp string)
 	}
 	tnt.UpdateTreeWrapper("./")
 	fmt.Println("in start server",tnt.Tree)
+
+	go tnt.FST_watch_files(tnt.root)
 
 	// RPC set-up borrowed from Lab
 	rpcs := rpc.NewServer()

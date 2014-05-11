@@ -1,14 +1,11 @@
-package TnT_v2
+package TnT_v3
 
 import (
     "code.google.com/p/go.exp/inotify"
     "log"
     "fmt"
-    "strconv"
     "os"
     "strings"
-    //"os"
-    //"encoding/gob"
 )
 
 //This function sets watch on folders in directory
@@ -44,7 +41,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
     }
     fmt.Println(dirname)
     //Set watch on /tmp folder for transfers
-    tnt.FST_set_watch("../roots/tmp"+strconv.Itoa(tnt.me)+"/", watcher)
+    tnt.FST_set_watch(tnt.tmp, watcher)
     tnt.FST_set_watch(dirname, watcher)
 
     fst := tnt.Tree.MyTree
@@ -55,9 +52,9 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //fmt.Println("I see event: ", ev)
                 //This if statement causes us to avoid taking into account swap files used to keep 
                 //track of file modifications
-                if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream") && !strings.Contains(ev.Name,tnt.tmp)) {                
+                if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream") && !strings.Contains(ev.Name,strings.TrimSuffix(tnt.tmp, "/"))) {
                     if(ev.Mask != IN_CLOSE && ev.Mask != IN_OPEN && ev.Mask != IN_OPEN_ISDIR && ev.Mask != IN_CLOSE_ISDIR){
-                    //fmt.Println("ev.Name: ", ev.Name)
+                    fmt.Println("event: ", ev)
                     fi, err := os.Lstat(ev.Name)
                     key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
 
@@ -85,7 +82,6 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
                     
                     }
-                    
                 }
 
             case err := <-watcher.Error:

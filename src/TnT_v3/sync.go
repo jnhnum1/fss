@@ -1,4 +1,4 @@
-package TnT_v2_2
+package TnT_v3
 
 import (
 	"fmt"
@@ -68,10 +68,10 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 		tnt.ParseTree("./", 0)
 		tnt.PrintTmp()
 		var a int
-		//fmt.Scanf("%d", &a)
+		fmt.Scanf("%d", &a)
 		fmt.Println(a)
 		tnt.Apply()
-		fmt.Scanf("%d", &a)
+		//fmt.Scanf("%d", &a)
 		tnt.LogToFile()
 	}
 }

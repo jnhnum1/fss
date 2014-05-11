@@ -1,4 +1,4 @@
-package TnT_v2_2
+package TnT_v3
 
 import (
 	"fmt"
@@ -33,10 +33,12 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 	if _, exists := fst[path]; exists == true {
 		tnt.PropagateUp(fst[path].VerVect, fst[path].SyncVect, fst[path].Parent)
 	} else {
-		prt := parent(path)
-		fst[prt].VerVect[tnt.me] = tnt.Tree.LogicalTime
-		fst[prt].SyncVect[tnt.me] = tnt.Tree.LogicalTime
-		tnt.PropagateUp(fst[prt].VerVect, fst[prt].SyncVect, fst[prt].Parent)
+		if path != "./" {
+			prt := parent(path)
+			fst[prt].VerVect[tnt.me] = tnt.Tree.LogicalTime
+			fst[prt].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+			tnt.PropagateUp(fst[prt].VerVect, fst[prt].SyncVect, fst[prt].Parent)
+		}
 	}
 }
 
