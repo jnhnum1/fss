@@ -125,6 +125,62 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 
 }
 
+func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer,){
+    fst := tnt.Tree.MyTree
+
+    rand.Seed(42)
+    action_list := [] string{
+        "Create_Dir",
+        "Delete_Dir",
+        "Create_File",
+        "Delete_File",
+        "Modify_File",
+        "Move_Up",
+        "Move_Down"
+    }
+    cur_dir := tnt.root
+
+    for i := 0; i<num_actions; i++ {
+        this_action := action_list[rand.Intn(len(action_list))]
+        fmt.Println(cur_dir)
+        if this_action == "Create_Dir" {
+            fmt.Println("Creating Directory")
+            os.Mkdir(cur_dir+strconv.Itoa(i)+"/", 0777)
+
+        } else if this_action == "Delete_Dir" {
+            fmt.Println("Deleting Directory")
+
+        } else if this_action == "Create_File" {
+            fmt.Println("Creating File")
+            os.Create(cur_dir+strconv.Itoa(i)+".txt")
+
+        } else if this_action == "Delete_File" {
+            fmt.Println("Deleting File")
+
+        } else if this_action == "Modify_File" {
+            fmt.Println("Modifying File")
+
+        } else if this_action == "Move_Up" {
+            fmt.Println("Moving Up")
+            if cur_dir != "./" {
+                cur_dir = parent(cur_dir)
+            }
+            
+        } else if this_action == "Move_Down" {
+            fmt.Println("Moving Down")
+            old_cur := cur_dir
+            for child,_ := range fst[cur_dir].Children {
+                if fst[child].Isdir{
+                    cur_dir = child
+                }
+            }
+            
+        }
+    }
+
+
+}
+
 func main() {
 
   	const nservers = 3
@@ -194,36 +250,11 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    rand.Seed(42)
-    action_list := [] string{
-        "Create_Dir",
-        "Delete_Dir",
-        "Create_File",
-        "Delete_File",
-        "Modify_File",
+    for i:=0;i<1;i++{
+        go EditDirectory(5,tnts[i])
     }
 
-    for i := 0; i<3; i++ {
-        this_action := action_list[rand.Intn(len(action_list))]
-        my_tnt  := rand.Intn(3)
-        fmt.Println(my_tnt)
-        if this_action == "Create_Dir" {
-            fmt.Println("Creating Directory")
-
-
-        } else if this_action == "Delete_Dir" {
-            fmt.Println("Deleting Directory")
-
-        } else if this_action == "Create_File" {
-            fmt.Println("Creating File")
-
-        } else if this_action == "Delete_File" {
-            fmt.Println("Deleting File")
-
-        } else if this_action == "Modify_File" {
-            fmt.Println("Modifying File")
-        }
-    }
+    
 
 }
 
