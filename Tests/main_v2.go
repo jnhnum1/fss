@@ -170,7 +170,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             fmt.Println("Moving Down")
             old_cur := cur_dir
             for child,_ := range fst[cur_dir].Children {
-                if fst[child].Isdir{
+                if fst[child].IsDir{
                     cur_dir = child
                 }
             }
@@ -250,7 +250,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    go EditDirectory(5,tnts[0], tnts[0].root)
+    go EditDirectory(5,tnts[0], common_root+strconv.Itoa(0)+"/")
     // for i:=0;i<1;i++{
     //     go EditDirectory(5,tnts[i])
     // }
