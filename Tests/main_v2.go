@@ -203,7 +203,7 @@ func main() {
         "Modify_File",
     }
 
-    for i := 0; i<3 i++ {
+    for i := 0; i<3; i++ {
         this_action := action_list[rand.Intn(len(action_list))]
         fmt.Println(this_action)
         if this_action == "Create_Dir" {
