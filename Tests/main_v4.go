@@ -193,7 +193,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
         }
         
         
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(10 * time.Millisecond)
     }
     fmt.Println(me, " am done ...")
     c <- 1
@@ -268,9 +268,6 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    // for {
-
-    // }
     var c []chan int  
     //c := make(chan int)
     stop_all := make(chan int)
@@ -287,8 +284,8 @@ func main() {
       sync_with := rand.Intn(nservers)
       
       
-      if sync_with != i{
-        tnt[i].SyncWrapper(sync_with,"./")
+      if sync_with != i {
+        tnts[i].SyncWrapper(sync_with,"./")
       }
     }
     
