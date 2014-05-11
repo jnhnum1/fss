@@ -11,6 +11,7 @@ import (
     "math/rand"
     "time"
     "syscall"
+    "ioutil"
 )
 
 const (
@@ -167,7 +168,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 if !file.IsDir() {
                     //open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
                     wr_str := []byte("Mod")
-                    err := ioutil.WriteFile(cur_dir + new_file_name,open_file,0777)
+                    err := ioutil.WriteFile(cur_dir + new_file_name,wr_str,0777)
                     fmt.Println("Modifying File ", cur_dir + new_file_name, err)
                     break
                 }
