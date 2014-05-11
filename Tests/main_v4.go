@@ -268,7 +268,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    var c []chan int
+    var c [nservers]chan int
     for i:=0; i<nservers; i++ {
       c[i] = make(chan int)
     }
