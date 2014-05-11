@@ -205,7 +205,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             tnt.SyncWrapper(sync_with,"./")
           }
         }
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(1000 * time.Millisecond)
     }
 }
 
