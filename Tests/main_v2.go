@@ -8,7 +8,10 @@ import (
   	"strconv"
   	"TnT_v2"
   	"path/filepath"
-    //"reflect"
+    "math/rand"
+    "time"
+    //"syscall"
+    "io/ioutil"
 )
 
 const (
@@ -32,60 +35,27 @@ func cleanup(tnts []*TnT_v2.TnTServer) {
   	}
 }
 
-/*
-func readLines(path string) ([]string, error) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil, err
-  }
-  defer file.Close()
 
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    lines = append(lines, scanner.Text())
-  }
-  return lines, scanner.Err()
-}
-*/
-func spaces(depth int) {
-    for i:=0; i<depth; i++ {
-        fmt.Printf("|")
+func parent(path string) string {
+    /*
+    Gives the path of the parent. For example,
+    (1) "./root/nest/tra/foo" will gives "./root/nest/tra/"
+    (2) "./root/nest/tra/foo/" also gives "./root/nest/tra/"
+    (3) If input does not contain a "/", then it will return ""
+    */
+    if len(path) == 0 {
+        return path
     }
-    fmt.Printf("|- ")
-}
-
-
-func DFT(dirname string, depth int) {
-    d, err := os.Open(dirname)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
+    end := len(path) - 1
+    if path[end] == filepath.Separator {
+        end--
     }
-    defer d.Close()
-    fi, err := d.Readdir(-1)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    for _, fi := range fi {
-        if fi.Mode().IsRegular() {
-            spaces(depth)
-            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
-        }
-        if fi.IsDir() {
-            spaces(depth)
-            //fmt.Println(fi.Name(), ":")
-            fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
-            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+    for ; end >= 0; end-- {
+        if path[end] == filepath.Separator {
+            break
         }
     }
-}
-func printfiles(nservers int) {
-  	for i:=0; i<nservers; i++ {
-    	path := common_root + strconv.Itoa(i) + "/" 
-    	DFT(path,0)
-  	}
+    return path[0:end+1]
 }
 
 func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
@@ -101,7 +71,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
         //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
 
         os.RemoveAll(common_root+strconv.Itoa(i)+"/")
-        os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
+        os.Remove("../Tests/WatchLog"+strconv.Itoa(i))
         os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
   	    tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 
@@ -125,6 +95,111 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 
 }
 
+func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
+    fmt.Println("Edit Directory ...")
+
+    rand.Seed( time.Now().UTC().UnixNano())
+
+    action_list := [] string{
+        "Create_Dir",
+        "Delete_Dir",
+        "Create_File",
+        "Delete_File",
+        "Modify_File",
+        "Move_Up",
+        "Move_Down",
+    }
+
+    cur_dir := root
+
+    for i := 0; i<num_actions; i++ {
+        my_num := rand.Intn(200)
+        this_action := action_list[rand.Intn(len(action_list))]
+        // this_action := "Move_Down"
+
+        if this_action == "Create_Dir" {
+            dir_name := cur_dir+strconv.Itoa(my_num)+"/"
+            os.Mkdir(dir_name, 0777)
+            fmt.Println("Creating Directory ", dir_name)
+
+        } else if this_action == "Delete_Dir" {      
+
+            d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(cur_dir + new_file_name )
+                fmt.Println(file,cur_dir,cur_dir + new_file_name )
+                if file.IsDir() {
+                    os.RemoveAll(cur_dir + new_file_name + "/")
+                    fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
+                    break
+                }
+            }
+
+        } else if this_action == "Create_File" {
+            file_name := cur_dir+strconv.Itoa(my_num)+".txt"
+            os.Create(file_name)
+            fmt.Println("Creating File ", file_name)
+
+        } else if this_action == "Delete_File" {
+
+             d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(cur_dir + new_file_name)
+
+                if !file.IsDir() {
+                    os.RemoveAll(cur_dir + new_file_name)
+                    fmt.Println("Deleting File ", cur_dir + new_file_name)
+                    break
+                }
+            }
+
+        } else if this_action == "Modify_File" {
+            fmt.Println("Modifying File")
+            d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(cur_dir + new_file_name)
+                //fmt.Println(file,cur_dir,cur_dir + new_file_name)
+                if !file.IsDir() {
+                    //open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
+                    wr_str := []byte(strconv.Itoa(my_num))
+                    err := ioutil.WriteFile(cur_dir + new_file_name,wr_str,0777)
+                    fmt.Println("Modifying File ", cur_dir + new_file_name, err)
+                    break
+                }
+            }
+
+        } else if this_action == "Move_Up" {
+            fmt.Println("Moving Up")
+            if cur_dir != root {
+                cur_dir = parent(cur_dir)
+            }
+            
+        } else if this_action == "Move_Down" {
+
+            d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(cur_dir + new_file_name)
+                fmt.Println(file,cur_dir,cur_dir + new_file_name)
+                if file.IsDir() {
+                    cur_dir = root + new_file_name + "/"
+                    fmt.Println("Moving Down to ", cur_dir)
+                    break
+                }
+            }
+            
+        }
+        time.Sleep(10 * time.Millisecond)
+    }
+}
+
 func main() {
 
   	const nservers = 3
@@ -136,64 +211,75 @@ func main() {
   	fmt.Println(tnts)
   	defer clean()
   
-  	fmt.Println("Test: Single File Syncing ...")
+  	// fmt.Println("Test: Single File Syncing ...")
 
   	
-  	fmt.Println("Enter -1 to quit the loop")
-  	a := 100
-  	b := 100
-  	for a >= 0 && b >= 0 {
+  	// fmt.Println("Enter -1 to quit the loop")
+  	// a := 100
+  	// b := 100
+  	// for a >= 0 && b >= 0 {
 
-      	fmt.Printf("Sync? Enter (who) and (from): ")
-      	n, err := fmt.Scanf("%d %d\n", &a, &b)
-      	if err != nil {
-          	fmt.Println("Scanf error:", n, err)
-      	}
+   //    	fmt.Printf("Sync? Enter (who) and (from): ")
+   //    	n, err := fmt.Scanf("%d %d\n", &a, &b)
+   //    	if err != nil {
+   //        	fmt.Println("Scanf error:", n, err)
+   //    	}
 
-      	if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
-          	tnts[a].SyncWrapper(b,"./")
-        	//printfiles(nservers)
-      	}
+   //    	if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
+   //        	tnts[a].SyncWrapper(b,"./")
+   //      	//printfiles(nservers)
+   //    	}
 
-    	fmt.Println("-----------------------------")
+   //  	fmt.Println("-----------------------------")
+  	// }
+  	
+
+  	
+  	var test_count int = 0
+  	fmt.Println("Test: Sync File ...")	
+
+  	//Create file on nest0
+  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
+  	os.Create(file_name)
+
+  	//Sync all servers
+	SyncAll(nservers, tnts)
+
+  	//Check that file is in nest1, Open throws error is file does not exist
+  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
+  	if err != nil {
+  		fmt.Println("File Transfer Failed")
+  		os.Exit(1)
   	}
-  	
-
-  	
- //  	var test_count int = 0
- //  	fmt.Println("Test: Sync File ...")	
-
- //  	//Create file on nest0
- //  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
- //  	os.Create(file_name)
-
- //  	//Sync all servers
-	// SyncAll(nservers, tnts)
-
- //  	//Check that file is in nest1, Open throws error is file does not exist
- //  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
- //  	if err != nil {
- //  		fmt.Println("File Transfer Failed")
- //  		os.Exit(1)
- //  	}
 
 
- //  	fmt.Println("Test: Sync Folder ...")
- //  	test_count++
- //  	//Create folder on nest0
- //  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
- //  	os.Mkdir(folder_name, 0777)
+  	fmt.Println("Test: Sync Folder ...")
+  	test_count++
+  	//Create folder on nest0
+  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
+  	os.Mkdir(folder_name, 0777)
 
- //    SyncAll(nservers, tnts)
+    SyncAll(nservers, tnts)
 
- //  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
- //  	if err != nil {
- //  		fmt.Println("Folder Transfer Failed")
- //  		os.Exit(1)
- //  	}
+  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
+  	if err != nil {
+  		fmt.Println("Folder Transfer Failed")
+  		os.Exit(1)
+  	}
 
+    fmt.Println("Test: Randomly Create Directories and Files ...")
 
-  	
+    EditDirectory(500,tnts[0], common_root+strconv.Itoa(0)+"/")
+
+    // for {
+
+    // }
+
+    // for i:=0;i<1;i++{
+    //     go EditDirectory(5,tnts[i])
+    // }
+
+    
 
 }
 
