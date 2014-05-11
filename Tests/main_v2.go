@@ -165,8 +165,9 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 file,_ := os.Lstat(cur_dir + new_file_name)
                 //fmt.Println(file,cur_dir,cur_dir + new_file_name)
                 if !file.IsDir() {
-                    open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
-                    _,err := open_file.WriteString("Mod")
+                    //open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
+                    wr_str := []byte("Mod")
+                    err := ioutil.WriteFile(cur_dir + new_file_name,open_file,0777)
                     fmt.Println("Modifying File ", cur_dir + new_file_name, err)
                     break
                 }
