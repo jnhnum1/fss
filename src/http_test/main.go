@@ -26,6 +26,23 @@ func (srv *Server) Ping(args *PingArgs, reply *PingReply) error {
   return nil
 }
 
+func call(srv string, rpcname string,
+            args interface{}, reply interface{}) bool {
+	c, errx := rpc.DialHTTP("tcp", srv + ":1235")
+	if errx != nil {
+		return false
+	}
+	defer c.Close()
+
+	err := c.Call(rpcname, args, reply)
+	if err == nil {
+		return true
+	}
+
+	fmt.Println(err)
+	return false
+}
+
 func main() {
 
   // this is just to parse command line options: --serve to run the RPC handler,
@@ -48,20 +65,17 @@ func main() {
     }
   }
   if address != "" {
-    client, err := rpc.DialHTTP("tcp", address + ":1235")
-    if err != nil {
-      log.Fatal("dialing:", err)
-    }
     for i := 0; i < 10; i++ {
       go func(i int) {
         var reply PingReply
-        err = client.Call("Server.Ping", PingArgs{i}, &reply)
-        if err != nil {
-          log.Fatal("ping error:", err)
+        ok := call(address, "Server.Ping", PingArgs{i}, &reply)
+        if ok {
+          fmt.Println("got ping reply: ", reply.N)
+        } else {
+          log.Fatalf("error on call")
         }
-        fmt.Println("got ping reply: ", reply.N)
       }(i)
-      time.Sleep(time.Second)
     }
+    time.Sleep(time.Second)
   }
 }
