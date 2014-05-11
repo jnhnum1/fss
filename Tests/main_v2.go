@@ -250,9 +250,10 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    for i:=0;i<1;i++{
-        go EditDirectory(5,tnts[i])
-    }
+    go EditDirectory(5,tnts[0])
+    // for i:=0;i<1;i++{
+    //     go EditDirectory(5,tnts[i])
+    // }
 
     
 
