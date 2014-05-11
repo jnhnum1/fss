@@ -207,6 +207,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
         }
         time.Sleep(100 * time.Millisecond)
     }
+    fmt.Println(me, " am done ...")
     c <- 1
 }
 
@@ -285,7 +286,7 @@ func main() {
       
     c := make(chan int)
     for i:=0; i<nservers; i++ {
-        go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
+        go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
     }
 
     done_count := 0
@@ -293,6 +294,7 @@ func main() {
       <- c 
       done_count++
       if done_count == nservers{
+        fmt.Println("All are done")
         break
       }
     }
