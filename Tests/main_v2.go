@@ -114,7 +114,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         // this_action := "Move_Down"
         
         key_path := "./"+strings.TrimPrefix(cur_dir,root)
-        fmt.Println(cur_dir, key_path)
+        //fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
             dir_name := cur_dir+"/"+strconv.Itoa(i)+"/"
@@ -166,7 +166,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 //fmt.Println(file,cur_dir,cur_dir + new_file_name)
                 if !file.IsDir() {
                     file.WireString("Mod")
-                    fmt.Println("Modifying File ", cur_dir + new_file_name)
+                    fmt.Println("Modifying File ", cur_dir + file.Name())
                     break
                 }
             }
