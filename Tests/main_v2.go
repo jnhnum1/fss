@@ -205,7 +205,7 @@ func main() {
 
     for i := 0; i<3; i++ {
         this_action := action_list[rand.Intn(len(action_list))]
-        my_tnt  := i % numservers
+        my_tnt  := i % nservers
         //fmt.Println(this_action)
         if this_action == "Create_Dir" {
             fmt.Println("Creating Directory")
