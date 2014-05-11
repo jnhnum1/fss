@@ -205,7 +205,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             tnt.SyncWrapper(sync_with,"./")
           }
         }
-        time.Sleep(10 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
     c <- 1
 }
@@ -285,8 +285,7 @@ func main() {
       
     c := make(chan int)
     for i:=0; i<nservers; i++ {
-
-        go EditDirectory(250, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
+        go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
     }
 
     done_count := 0
