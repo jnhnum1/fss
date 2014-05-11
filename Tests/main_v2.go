@@ -112,7 +112,10 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
     for i := 0; i<num_actions; i++ {
         this_action := action_list[rand.Intn(len(action_list))]
-        fmt.Println(cur_dir)
+        
+        key_path := "./"+strings.TrimPrefix(cur_dir,root)
+        fmt.Println(cur_dir, key_path)
+
         if this_action == "Create_Dir" {
             fmt.Println("Creating Directory")
             os.Mkdir(cur_dir+strconv.Itoa(i)+"/", 0777)
@@ -145,7 +148,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             }
             
         }
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(1 * time.Second)
     }
 
 
