@@ -126,11 +126,11 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             defer d.Close()
             file_name, _ := d.Readdirnames(-1)
             for _,new_file_name := range file_name{
-                file,_ := os.Lstat(root + new_file_name + "/")
+                file,_ := os.Lstat(cur_dir + new_file_name + "/")
 
                 if file.IsDir() {
-                    os.RemoveAll(root + new_file_name + "/")
-                    fmt.Println("Deleting Directory", root + new_file_name)
+                    os.RemoveAll(cur_dir + new_file_name + "/")
+                    fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
                     break
                 }
             }
@@ -145,11 +145,11 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             defer d.Close()
             file_name, _ := d.Readdirnames(-1)
             for _,new_file_name := range file_name{
-                file,_ := os.Lstat(root + new_file_name)
+                file,_ := os.Lstat(cur_dir + new_file_name)
 
                 if !file.IsDir() {
-                    os.RemoveAll(root + new_file_name)
-                    fmt.Println("Deleting File ", root + new_file_name)
+                    os.RemoveAll(cur_dir + new_file_name)
+                    fmt.Println("Deleting File ", cur_dir + new_file_name)
                     break
                 }
             }
