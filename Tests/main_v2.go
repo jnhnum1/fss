@@ -112,7 +112,8 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     cur_dir := root
 
     for i := 0; i<num_actions; i++ {
-        this_action := action_list[rand.Intn(len(action_list))]
+        // this_action := action_list[rand.Intn(len(action_list))]
+        this_action := "Move_Down"
         
         key_path := "./"+strings.TrimPrefix(cur_dir,root)
         fmt.Println(cur_dir, key_path)
@@ -142,11 +143,18 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             
         } else if this_action == "Move_Down" {
             fmt.Println("Moving Down")
-            for child,_ := range fst[key_path].Children {
-                if fst[key_path].IsDir{
-                    cur_dir = root + strings.TrimPrefix(child,"./")
-                }
-            }
+
+            d, err := os.Open(tnt.root + path)
+            defer d.Close()
+            cfi, err := d.Readdir(-1)
+            fmt.Println(cfi)
+
+
+            // for child,_ := range fst[key_path].Children {
+            //     if fst[key_path].IsDir{
+            //         cur_dir = root + strings.TrimPrefix(child,"./")
+            //     }
+            // }
             
         }
         time.Sleep(1 * time.Second)
@@ -224,7 +232,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(25,tnts[0], common_root+strconv.Itoa(0)+"/")
+    EditDirectory(1,tnts[0], common_root+strconv.Itoa(0)+"/")
 
     for {
 
