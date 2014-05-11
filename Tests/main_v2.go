@@ -11,7 +11,7 @@ import (
     "math/rand"
     "time"
     "syscall"
-    "ioutil"
+    "io/ioutil"
 )
 
 const (
