@@ -15,11 +15,12 @@ Deepak Vasisht \\ \normalsize deepakv@mit.edu
 \abstract{We build a peer-to-peer file-system synchronizer, based on \href{http://swtch.com/tra/}{Tra}, which is performant and resilient to system crashes. We implement our file-system synchronizer in Go and ensure that all the guarantees for a file synchronizer mentioned in Tra are satisfied. We handle the system going offline by storing the metadata on the disk and using a two-phase synchronization method to ensure that crashes do not effect the system adversely even if they happen during sync. \textcolor{red}{Slightly more stuff needed.}}
 
 
-\input{introduction}
-\input{goals}
-\input{system_design}
-\input{implementation_details}
-\input{project_evaluation}
+\input{1_introduction}
+\input{2_goals}
+\input{3_system_design}
+\input{4_implementation_details}
+\input{5_project_evaluation}
+
 \begin{thebibliography}{1}
 \bibitem{tra-tech-report}
 \newblock Russ Cox, William Josephson.
