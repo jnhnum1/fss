@@ -88,8 +88,10 @@ func setup(tag string, nservers int) ([]*TnT_v3.TnTServer, func()) {
 func SyncAll(nservers int, tnts []*TnT_v3.TnTServer){
 
     for i := 0; i<nservers; i++ {
-        for j := 0; i<nservers; i++ {
-            tnts[i].SyncWrapper(j,"./")
+        for j := 0; j<nservers; j++ {
+            if j != i {
+              tnts[i].SyncWrapper(j,"./")
+            }
         }
     }
 
