@@ -172,7 +172,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 file,_ := os.Lstat(root + new_file_name)
 
                 if file.IsDir() {
-                    cur_dir = root + new_file_name
+                    cur_dir = file.Name()
                     fmt.Println("Moving Down to ", cur_dir)
                     break
                 }
