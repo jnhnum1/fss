@@ -12,6 +12,7 @@ import (
     "time"
     //"syscall"
     "io/ioutil"
+    "hash/fnv"
 )
 
 const (
@@ -35,6 +36,37 @@ func cleanup(tnts []*TnT_v2_2.TnTServer) {
   	}
 }
 
+func DFT(dirname string, depth int ,str string)string {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+           str=str+fi.Name()
+        }
+        if fi.IsDir() {
+  			str=str+fi.Name()
+            str=str+DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+        }else{
+        	str=str+fi.Contents()
+        }
+    }
+    return str
+}
+
+func hash(s string) uint32 {
+  h := fnv.New32a()
+  h.Write([]byte(s))
+  return h.Sum32()
+}
 
 func parent(path string) string {
     /*
@@ -293,5 +325,8 @@ func main() {
     }
     
     SyncAll(nservers, tnts)
+    for i=1;i<nservers;i++{
+    	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/")))
+    }
 }
 

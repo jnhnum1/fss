@@ -14,7 +14,7 @@ func spaces(depth int) {
 }
 
 
-func DFT(dirname string, depth int) {
+func DFT(dirname string, depth int ,str string)string {
     d, err := os.Open(dirname)
     if err != nil {
         fmt.Println(err)
@@ -28,16 +28,21 @@ func DFT(dirname string, depth int) {
     }
     for _, fi := range fi {
         if fi.Mode().IsRegular() {
-            spaces(depth)
-            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
+//            spaces(depth)
+           // fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
+           str=str+fi.Name()
         }
         if fi.IsDir() {
-            spaces(depth)
+//            spaces(depth)
             //fmt.Println(fi.Name(), ":")
-            fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
-            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+  //          fmt.Println(dirname+fi.Name()+string(filepath.Separator), ":", fi.ModTime())
+  			str=str+fi.Name()
+            str=str+DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+        }else{
+        	str=str+fi.Contents()
         }
     }
+    return str
 }
 
 func main() {
