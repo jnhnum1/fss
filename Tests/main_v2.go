@@ -111,6 +111,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     cur_dir := root
 
     for i := 0; i<num_actions; i++ {
+        my_num := rand.Intn(200)
         this_action := action_list[rand.Intn(len(action_list))]
         // this_action := "Move_Down"
         
@@ -118,7 +119,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         //fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
-            dir_name := cur_dir+strconv.Itoa(i)+"/"
+            dir_name := cur_dir+strconv.Itoa(my_num)+"/"
             os.Mkdir(dir_name, 0777)
             fmt.Println("Creating Directory ", dir_name)
 
@@ -138,7 +139,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             // }
 
         } else if this_action == "Create_File" {
-            file_name := cur_dir+strconv.Itoa(i)+".txt"
+            file_name := cur_dir+strconv.Itoa(my_num)+".txt"
             os.Create(file_name)
             fmt.Println("Creating File ", file_name)
 
@@ -167,7 +168,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 //fmt.Println(file,cur_dir,cur_dir + new_file_name)
                 if !file.IsDir() {
                     //open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
-                    wr_str := []byte(strconv.Itoa(i))
+                    wr_str := []byte(strconv.Itoa(my_num))
                     err := ioutil.WriteFile(cur_dir + new_file_name,wr_str,0777)
                     fmt.Println("Modifying File ", cur_dir + new_file_name, err)
                     break
