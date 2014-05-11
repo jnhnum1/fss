@@ -196,13 +196,14 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             }
             
         }
-        time.Sleep(10 * time.Millisecond)
+        
         if i%10 == 0 {
           sync_with := rand.Intn(nservers)
           if sync_with != me{
             tnt.SyncWrapper(sync_with,"./")
           }
         }
+        time.Sleep(100 * time.Millisecond)
     }
 }
 
@@ -280,7 +281,7 @@ func main() {
     // }
 
     for i:=0; i<nservers; i++ {
-        EditDirectory(250, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i])
+        EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i])
     }
 
     SyncAll(nservers, tnts)
