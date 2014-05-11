@@ -125,7 +125,7 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer,){
+func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fst := tnt.Tree.MyTree
 
     rand.Seed(42)
@@ -138,7 +138,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer,){
         "Move_Up",
         "Move_Down",
     }
-    cur_dir := tnt.root
+    cur_dir := root
 
     for i := 0; i<num_actions; i++ {
         this_action := action_list[rand.Intn(len(action_list))]
@@ -250,7 +250,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    go EditDirectory(5,tnts[0])
+    go EditDirectory(5,tnts[0], tnts[0].root)
     // for i:=0;i<1;i++{
     //     go EditDirectory(5,tnts[i])
     // }
