@@ -99,6 +99,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
+
     action_list := [] string{
         "Create_Dir",
         "Delete_Dir",
@@ -115,9 +116,6 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         my_num := rand.Intn(200)
         this_action := action_list[rand.Intn(len(action_list))]
         // this_action := "Move_Down"
-        
-        //key_path := "./"+strings.TrimPrefix(cur_dir,root)
-        //fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
             dir_name := cur_dir+strconv.Itoa(my_num)+"/"
@@ -271,7 +269,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(200,tnts[0], common_root+strconv.Itoa(0)+"/")
+    EditDirectory(500,tnts[0], common_root+strconv.Itoa(0)+"/")
 
     // for {
 
