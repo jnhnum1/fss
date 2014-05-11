@@ -10,7 +10,7 @@ import (
   	"path/filepath"
     "math/rand"
     "time"
-    "syscall"
+    //"syscall"
     "io/ioutil"
 )
 
