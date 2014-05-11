@@ -268,12 +268,14 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    var c []chan int  
+    var c []chan int
+    for i:=0; i<nservers; i++ {
+      c[i] = make(chan int)
+    }
     //c := make(chan int)
     stop_all := make(chan int)
     for j:=1;j<6;j++{
       for i:=0; i<nservers; i++ {
-          c[i] = make(chan int)
 
           go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
       }
