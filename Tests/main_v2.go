@@ -142,9 +142,9 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             
         } else if this_action == "Move_Down" {
             fmt.Println("Moving Down")
-            for child,_ := range fst[cur_dir].Children {
-                if fst[child].IsDir{
-                    cur_dir = child
+            for child,_ := range fst[key_path].Children {
+                if fst[key_path].IsDir{
+                    cur_dir = root + strings.TrimPrefix(child,"./")
                 }
             }
             
