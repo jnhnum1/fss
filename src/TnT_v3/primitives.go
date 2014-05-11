@@ -40,6 +40,7 @@ type TnTServer struct {
 	Tree *FStree
 	dump string
 	tmp string
+	TestChan chan [] int
 }
 
 func (tnt *TnTServer) LogToFile(){
