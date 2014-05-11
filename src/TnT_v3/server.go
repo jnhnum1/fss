@@ -51,14 +51,14 @@ func (tnt *TnTServer) Kill() {
 	tnt.l.Close()
 }
 
-func StartServer(servers []string, me int, root string, dump string, tmp string) *TnTServer {
+func StartServer(servers []string, me int, root string, dump string, tmp string, test bool) *TnTServer {
 	gob.Register(GetFileArgs{})
 	gob.Register(GetDirArgs{})
 	tnt := new(TnTServer)
 	tnt.me = me
 	tnt.servers = servers
 	tnt.root = root
-	tnt.Test = false
+	tnt.Test = test
 	if _, err := os.Lstat(root); err != nil {
 		os.Mkdir(root, 0777)
 	}
