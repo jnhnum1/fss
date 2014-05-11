@@ -54,9 +54,10 @@ func DFT(dirname string, depth int ,str string)string {
         }
         if fi.IsDir() {
   			str=str+fi.Name()
-            str=str+DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
+            str=DFT(dirname+fi.Name()+string(filepath.Separator), depth+1,str)
         }else{
-        	str=str+fi.Contents()
+		data,_:=ioutil.ReadFile(dirname+fi.Name())
+        	str=str+string(data)
         }
     }
     return str
@@ -325,8 +326,8 @@ func main() {
     }
     
     SyncAll(nservers, tnts)
-    for i=1;i<nservers;i++{
-    	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/")))
+    for i:=1;i<nservers;i++{
+    	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/",0,"")))
     }
 }
 
