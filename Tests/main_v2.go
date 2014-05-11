@@ -291,7 +291,7 @@ func main() {
 
     done_count := 0
     for {
-      s := <- c 
+      <- c 
       done_count++
       if done_count == nservers{
         break
