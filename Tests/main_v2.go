@@ -1,4 +1,4 @@
-spackage main
+package main
 
 import (
   	//"bufio"
@@ -6,7 +6,7 @@ import (
   	//"log"
   	"os"
   	"strconv"
-  	"TnT_v2"
+  	"TnT_v3"
   	"path/filepath"
     "math/rand"
     "time"
