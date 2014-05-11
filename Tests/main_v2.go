@@ -144,7 +144,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         } else if this_action == "Move_Down" {
             fmt.Println("Moving Down")
 
-            d, err := os.Open(tnt.root + path)
+            d, err := os.Open(cur_dir)
             defer d.Close()
             cfi, err := d.Readdir(-1)
             fmt.Println(cfi)
