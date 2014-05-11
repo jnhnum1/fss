@@ -10,6 +10,7 @@ import (
   	"path/filepath"
     "math/rand"
     "time"
+    "strings"
 )
 
 const (
