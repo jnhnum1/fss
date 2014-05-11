@@ -75,10 +75,6 @@ func setup(tag string, nservers int) ([]*TnT_v3.TnTServer, func()) {
         os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
   	    tnts[i]=TnT_v3.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/", true)
 
-  	    fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
-
-  	    go tnts[i].FST_watch_files(common_root+strconv.Itoa(i)+"/")
-
   	}
 
   	clean := func() { (cleanup(tnts)) }

@@ -20,6 +20,18 @@ We implement a Tra based file system synchronization system. Our implementation,
 \section{Goals}
 We plan to implement a file synchronization system based on \href{http://swtch.com/tra/}{Tra}. We plan to ensure that we achieve all the five objectives mentioned in the introduction of Tra Technical Report \cite{tra-tech-report}. We will implement multiple versions starting from a basic version that just ensures correctness (including Tra's ``no false conflicts'' guarantee) and optimize further for reduced network communication, and reduced metadata overhead. We plan to test it on up to 10 machines (or virtual machines, maybe on EC2) running concurrent updates to file systems.
 
+\section{System Design}
+
+\subsection{File Watcher}
+TnT has a method that allows the system to recognize when a user edits the directory.  In order to track the updates made by the user, TnT watches
+the directory in the background using a Linux package called Inotify.  TnT initially sets a watch on the desired directory from Inotify.  When a 
+user updates the file system in any way, they generate an event which is seen by the watcher.
+
+\subsection{Synchronization}
+
+\subsection{Failure Recovery}
+
+
 \section{Implementation Details}
 We will use Go for our implementation because of its good support for OS-level operations like watching the file system, high-level programming features, as well as our experience using Go in 6.824.\\
 
