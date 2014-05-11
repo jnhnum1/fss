@@ -112,18 +112,6 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		} else {
 			// Delete-Update conflict resolved as SYNC_DOWN
 			action = SYNC_DOWN
-			/*
-			fmt.Println("Delete-Update conflict on", path, ":", srv, "has deleted, but", tnt.me, "has updated")
-			for choice != tnt.me && choice != srv {
-				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
-				fmt.Scanf("%d", &choice)
-			}
-			if choice == tnt.me {
-				action = SYNC_DOWN
-			} else {
-				action = DELETE
-			}
-			*/
 		}
 	} else if reply.Exists == true && exists == false {
 		live_ancestor := tnt.LiveAncestor(path)
@@ -136,18 +124,6 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		} else {
 			// Update-Delete conflict: resolved as UPDATE
 			action = UPDATE
-			/*
-			fmt.Println("Update-Delete conflict on", path, ":", srv, "has updated, but", tnt.me, "has deleted")
-			for choice != tnt.me && choice != srv {
-				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
-				fmt.Scanf("%d", &choice)
-			}
-			if choice == tnt.me {
-				action = DO_NOTHING
-			} else {
-				action = UPDATE
-			}
-			*/
 		}
 	} else /* reply.Exists == true && exists == true */ {
 		mA_vs_sB := compareVersionVects(reply.VerVect, fst[path].SyncVect)
@@ -196,6 +172,16 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			}
 			fst[path].Parent = parent(path)
 			fst[parent(path)].Children[path] = true
+
+			setVersionVect(fst[path].VerVect, reply.VerVect)
+			//setMaxVersionVect(fst[path].SyncVect, reply.SyncVect) // done outside of 'if'
+		}
+
+		fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
+
+		newSyncVect := make(map[int]int64)
+		for i:=0; i<len(tnt.servers); i++ {
+			newSyncVect[i] = END_OF_WORLD
 		}
 
 		for k, _ := range fst[path].Children {
@@ -209,9 +195,9 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			}
 			if c_exists == true {
 				setMaxVersionVect(fst[path].VerVect, c_verVect)
-				setMinVersionVect(fst[path].SyncVect, c_syncVect)
+				setMinVersionVect(newSyncVect, c_syncVect)
 			} else {
-				setMinVersionVect(fst[path].SyncVect, c_syncVect)
+				setMinVersionVect(newSyncVect, c_syncVect)
 			}
 		}
 		for k, _ := range reply.Children {
@@ -227,14 +213,15 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 				}
 				if c_exists == true {
 					setMaxVersionVect(fst[path].VerVect, c_verVect)
-					setMinVersionVect(fst[path].SyncVect, c_syncVect)
+					setMinVersionVect(newSyncVect, c_syncVect)
 				} else {
-					setMinVersionVect(fst[path].SyncVect, c_syncVect)
+					setMinVersionVect(newSyncVect, c_syncVect)
 				}
 			}
 		}
 		fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
-		setVersionVect(fst[path].VerVect, reply.VerVect)
+		//setVersionVect(fst[path].VerVect, reply.VerVect)
+		setVersionVect(fst[path].SyncVect, newSyncVect)
 		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
 		exists = true
@@ -392,6 +379,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 			fst[parent(path)].Children[path] = true
 		}
 		fst[path].LastModTime = ts
+		fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
 		fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
 		setVersionVect(fst[path].VerVect, reply.VerVect)
 		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
