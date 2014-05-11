@@ -70,11 +70,12 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 		tnt.PrintTmp()
 		var a int
 
+		fmt.Println(tnt.Test)
 		if !tnt.Test {
 			fmt.Scanf("%d", &a)
 			fmt.Println(a)
 		}
-		
+
 		tnt.Apply()
 		//fmt.Scanf("%d", &a)
 		tnt.LogToFile()
