@@ -123,18 +123,18 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
         } else if this_action == "Delete_Dir" {      
 
-            d, _ := os.Open(cur_dir)
-            defer d.Close()
-            file_name, _ := d.Readdirnames(-1)
-            for _,new_file_name := range file_name{
-                file,_ := os.Lstat(cur_dir + new_file_name )
-                fmt.Println(file,cur_dir,cur_dir + new_file_name )
-                if file.IsDir() {
-                    os.RemoveAll(cur_dir + new_file_name + "/")
-                    fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
-                    break
-                }
-            }
+            // d, _ := os.Open(cur_dir)
+            // defer d.Close()
+            // file_name, _ := d.Readdirnames(-1)
+            // for _,new_file_name := range file_name{
+            //     file,_ := os.Lstat(cur_dir + new_file_name )
+            //     fmt.Println(file,cur_dir,cur_dir + new_file_name )
+            //     if file.IsDir() {
+            //         os.RemoveAll(cur_dir + new_file_name + "/")
+            //         fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
+            //         break
+            //     }
+            // }
 
         } else if this_action == "Create_File" {
             file_name := cur_dir+strconv.Itoa(i)+".txt"
@@ -143,18 +143,18 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
         } else if this_action == "Delete_File" {
 
-             d, _ := os.Open(cur_dir)
-            defer d.Close()
-            file_name, _ := d.Readdirnames(-1)
-            for _,new_file_name := range file_name{
-                file,_ := os.Lstat(cur_dir + new_file_name)
+            //  d, _ := os.Open(cur_dir)
+            // defer d.Close()
+            // file_name, _ := d.Readdirnames(-1)
+            // for _,new_file_name := range file_name{
+            //     file,_ := os.Lstat(cur_dir + new_file_name)
 
-                if !file.IsDir() {
-                    os.RemoveAll(cur_dir + new_file_name)
-                    fmt.Println("Deleting File ", cur_dir + new_file_name)
-                    break
-                }
-            }
+            //     if !file.IsDir() {
+            //         os.RemoveAll(cur_dir + new_file_name)
+            //         fmt.Println("Deleting File ", cur_dir + new_file_name)
+            //         break
+            //     }
+            // }
 
         } else if this_action == "Modify_File" {
             fmt.Println("Modifying File")
@@ -269,7 +269,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(200,tnts[0], common_root+strconv.Itoa(0)+"/")
+    EditDirectory(20,tnts[0], common_root+strconv.Itoa(0)+"/")
 
     // for {
 
