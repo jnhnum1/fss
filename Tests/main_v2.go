@@ -195,11 +195,11 @@ func main() {
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
     action_list := [] string {
-        "Create_Dir"
-        "Delete_Dir"
-        "Create_File"
-        "Delete_File"
-        "Modify_File"
+        "Create_Dir",
+        "Delete_Dir",
+        "Create_File",
+        "Delete_File",
+        "Modify_File",
     }
 
     for i := 0; i<3 i++ {
