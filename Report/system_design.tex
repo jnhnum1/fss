@@ -1,0 +1,12 @@
+\section{System Design}
+
+\subsection{File Watcher}
+TnT has a method that allows the system to recognize when a user edits the directory.  In order to track the updates made by the user, TnT watches
+the directory in the background using a Linux package called Inotify.  TnT initially sets a watch on the desired directory from Inotify.  When a 
+user updates the file system in any way, they generate an event which is seen by the watcher.
+
+\subsection{Synchronization}
+
+\subsection{Failure Recovery}
+
+
