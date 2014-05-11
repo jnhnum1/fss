@@ -97,18 +97,18 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fmt.Println("Edit Directory ...")
 
-    fst := tnt.Tree.MyTree
+    // fst := tnt.Tree.MyTree
 
     rand.Seed(42)
-    action_list := [] string{
-        "Create_Dir",
-        "Delete_Dir",
-        "Create_File",
-        "Delete_File",
-        "Modify_File",
-        "Move_Up",
-        "Move_Down",
-    }
+    // action_list := [] string{
+    //     "Create_Dir",
+    //     "Delete_Dir",
+    //     "Create_File",
+    //     "Delete_File",
+    //     "Modify_File",
+    //     "Move_Up",
+    //     "Move_Down",
+    // }
     cur_dir := root
 
     for i := 0; i<num_actions; i++ {
@@ -146,7 +146,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
             d, err := os.Open(cur_dir)
             defer d.Close()
-            cfi, err := d.Readdir(-1)
+            cfi, _ := d.Readdir(-1)
             fmt.Println(cfi)
 
 
