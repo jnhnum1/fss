@@ -132,7 +132,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
         } else if this_action == "Move_Up" {
             fmt.Println("Moving Up")
-            if cur_dir != "./" {
+            if cur_dir != root {
                 cur_dir = parent(cur_dir)
             }
             
@@ -220,7 +220,7 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(5,tnts[0], common_root+strconv.Itoa(0)+"/")
+    EditDirectory(25,tnts[0], common_root+strconv.Itoa(0)+"/")
 
     for {
 
