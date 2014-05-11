@@ -117,8 +117,9 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
-            fmt.Println("Creating Directory")
-            os.Mkdir(cur_dir+"/"+strconv.Itoa(i)+"/", 0777)
+            dir_name := cur_dir+"/"+strconv.Itoa(i)+"/"
+            os.Mkdir(dir_name, 0777)
+            fmt.Println("Creating Directory ", dir_name)
 
         } else if this_action == "Delete_Dir" {      
 
@@ -136,8 +137,9 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             }
 
         } else if this_action == "Create_File" {
-            fmt.Println("Creating File")
-            os.Create(cur_dir+strconv.Itoa(i)+".txt")
+            file_name := cur_dir+strconv.Itoa(i)+".txt"
+            os.Create(file_name)
+            fmt.Println("Creating File ", file_name)
 
         } else if this_action == "Delete_File" {
 
@@ -156,6 +158,18 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
 
         } else if this_action == "Modify_File" {
             fmt.Println("Modifying File")
+            d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(cur_dir + new_file_name)
+                //fmt.Println(file,cur_dir,cur_dir + new_file_name)
+                if !file.IsDir() {
+                    file.WireString("Mod")
+                    fmt.Println("Modifying File ", cur_dir + new_file_name)
+                    break
+                }
+            }
 
         } else if this_action == "Move_Up" {
             fmt.Println("Moving Up")
