@@ -169,7 +169,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             defer d.Close()
             file_name, _ := d.Readdirnames(-1)
             for _,new_file_name := range file_name{
-                file,_ := os.Lstat(root + new_file_name)
+                file,_ := os.Lstat(root + new_file_name + "/")
 
                 if file.IsDir() {
                     cur_dir = root + new_file_name
@@ -254,11 +254,11 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(30,tnts[0], common_root+strconv.Itoa(0)+"/")
+    // EditDirectory(30,tnts[0], common_root+strconv.Itoa(0)+"/")
 
-    // for {
+    for {
 
-    // }
+    }
     // for i:=0;i<1;i++{
     //     go EditDirectory(5,tnts[i])
     // }
