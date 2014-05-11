@@ -61,7 +61,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                     fi, err := os.Lstat(ev.Name)
                     key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
 
-                    fmt.Println("ev: ", ev, key_path)
+                    //fmt.Println("ev: ", ev, key_path)
 
                     if err == nil {
                         if fi.IsDir(){
