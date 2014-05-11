@@ -279,8 +279,8 @@ func main() {
 
     // }
 
-    for i:=0;i<1;i++{
-        EditDirectory(5,tnts[i], i, tnts common_root+strconv.Itoa(0)+"/")
+    for i:=0; i<1; i++ {
+        EditDirectory(5,tnts[i], i, common_root+strconv.Itoa(0)+"/")
     }
 
     
