@@ -117,7 +117,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         //fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
-            dir_name := cur_dir+"/"+strconv.Itoa(i)+"/"
+            dir_name := cur_dir+strconv.Itoa(i)+"/"
             os.Mkdir(dir_name, 0777)
             fmt.Println("Creating Directory ", dir_name)
 
@@ -166,8 +166,8 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
                 //fmt.Println(file,cur_dir,cur_dir + new_file_name)
                 if !file.IsDir() {
                     open_file,_ := os.Open(cur_dir + new_file_name)
-                    open_file.WriteString("Mod")
-                    fmt.Println("Modifying File ", cur_dir + new_file_name)
+                    _,err := open_file.WriteString("Mod")
+                    fmt.Println("Modifying File ", cur_dir + new_file_name, err)
                     break
                 }
             }
