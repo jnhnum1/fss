@@ -127,7 +127,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             file_name, _ := d.Readdirnames(-1)
             for _,new_file_name := range file_name{
                 file,_ := os.Lstat(cur_dir + new_file_name + "/")
-
+                fmt.Println(file,cur_dir,cur_dir + new_file_name + "/" )
                 if file.IsDir() {
                     os.RemoveAll(cur_dir + new_file_name + "/")
                     fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
