@@ -199,13 +199,13 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             
         }
         
-        if i%10 == 0 {
+        if i%5 == 0 {
           sync_with := rand.Intn(nservers)
           if sync_with != me{
             tnt.SyncWrapper(sync_with,"./")
           }
         }
-        time.Sleep(1000 * time.Millisecond)
+        time.Sleep(10 * time.Millisecond)
     }
     c <- 1
 }
