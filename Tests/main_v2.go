@@ -280,7 +280,7 @@ func main() {
     // }
 
     for i:=0; i<1; i++ {
-        EditDirectory(5, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
+        EditDirectory(25, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
     }
 
     
