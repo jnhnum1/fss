@@ -97,23 +97,21 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fmt.Println("Edit Directory ...")
 
-    // fst := tnt.Tree.MyTree
-
-    rand.Seed(42)
-    // action_list := [] string{
-    //     "Create_Dir",
-    //     "Delete_Dir",
-    //     "Create_File",
-    //     "Delete_File",
-    //     "Modify_File",
-    //     "Move_Up",
-    //     "Move_Down",
-    // }
+    //rand.Seed(42)
+    action_list := [] string{
+        "Create_Dir",
+        "Delete_Dir",
+        "Create_File",
+        "Delete_File",
+        "Modify_File",
+        "Move_Up",
+        "Move_Down",
+    }
     cur_dir := root
 
     for i := 0; i<num_actions; i++ {
-        // this_action := action_list[rand.Intn(len(action_list))]
-        this_action := "Move_Down"
+        this_action := action_list[rand.Intn(len(action_list))]
+        // this_action := "Move_Down"
         
         key_path := "./"+strings.TrimPrefix(cur_dir,root)
         fmt.Println(cur_dir, key_path)
@@ -122,15 +120,39 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             fmt.Println("Creating Directory")
             os.Mkdir(cur_dir+strconv.Itoa(i)+"/", 0777)
 
-        } else if this_action == "Delete_Dir" {
-            fmt.Println("Deleting Directory")
+        } else if this_action == "Delete_Dir" {      
+
+            d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(root + new_file_name)
+
+                if file.IsDir() {
+                    os.RemoveAll(root + new_file_name)
+                    fmt.Println("Deleting Directory", root + new_file_name)
+                    break
+                }
+            }
 
         } else if this_action == "Create_File" {
             fmt.Println("Creating File")
             os.Create(cur_dir+strconv.Itoa(i)+".txt")
 
         } else if this_action == "Delete_File" {
-            fmt.Println("Deleting File")
+
+             d, _ := os.Open(cur_dir)
+            defer d.Close()
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(root + new_file_name)
+
+                if !file.IsDir() {
+                    os.RemoveAll(root + new_file_name)
+                    fmt.Println("Deleting File ", root + new_file_name)
+                    break
+                }
+            }
 
         } else if this_action == "Modify_File" {
             fmt.Println("Modifying File")
@@ -142,22 +164,22 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             }
             
         } else if this_action == "Move_Down" {
-            fmt.Println("Moving Down")
 
-            d, err := os.Open(cur_dir)
+            d, _ := os.Open(cur_dir)
             defer d.Close()
-            cfi, _ := d.Readdir(-1)
-            fmt.Println(cfi)
+            file_name, _ := d.Readdirnames(-1)
+            for _,new_file_name := range file_name{
+                file,_ := os.Lstat(root + new_file_name)
 
-
-            // for child,_ := range fst[key_path].Children {
-            //     if fst[key_path].IsDir{
-            //         cur_dir = root + strings.TrimPrefix(child,"./")
-            //     }
-            // }
+                if file.IsDir() {
+                    cur_dir = root + new_file_name
+                    fmt.Println("Moving Down to ", cur_dir)
+                    break
+                }
+            }
             
         }
-        time.Sleep(1 * time.Second)
+        time.Sleep(100 * time.Millisecond)
     }
 
 
@@ -232,11 +254,11 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(1,tnts[0], common_root+strconv.Itoa(0)+"/")
+    EditDirectory(200,tnts[0], common_root+strconv.Itoa(0)+"/")
 
-    for {
+    // for {
 
-    }
+    // }
     // for i:=0;i<1;i++{
     //     go EditDirectory(5,tnts[i])
     // }
