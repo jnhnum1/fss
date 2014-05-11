@@ -286,7 +286,7 @@ func main() {
       
     c := make(chan int)
     for i:=0; i<nservers; i++ {
-        go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
+        go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c)
     }
 
     done_count := 0
