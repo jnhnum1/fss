@@ -58,6 +58,7 @@ func StartServer(servers []string, me int, root string, dump string, tmp string)
 	tnt.me = me
 	tnt.servers = servers
 	tnt.root = root
+	tnt.Test = false
 	if _, err := os.Lstat(root); err != nil {
 		os.Mkdir(root, 0777)
 	}
@@ -67,9 +68,6 @@ func StartServer(servers []string, me int, root string, dump string, tmp string)
 		os.Mkdir(tmp, 0777)
 	}
 
-	//Add channel to replace scanf
-	tnt.TestChan = make(chan [] int)
-  
 	f, err := os.Open(tnt.dump)
 	defer f.Close()
 	if err != nil {

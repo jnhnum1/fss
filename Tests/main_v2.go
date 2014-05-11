@@ -98,6 +98,8 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
     fmt.Println("Edit Directory ...")
 
+    tnt.Test = true
+
     rand.Seed( time.Now().UTC().UnixNano())
 
     action_list := [] string{
