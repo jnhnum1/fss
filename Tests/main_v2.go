@@ -95,7 +95,7 @@ func SyncAll(nservers int, tnts []*TnT_v3.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, nservers int, me int, root string, tnts *TnT_v3.TnTServer){
+func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v3.TnTServer){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
@@ -280,7 +280,7 @@ func main() {
     // }
 
     for i:=0; i<1; i++ {
-        EditDirectory(5, nserves, i, common_root+strconv.Itoa(0)+"/", tnts[i])
+        EditDirectory(5, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
     }
 
     
