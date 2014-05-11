@@ -1,4 +1,1 @@
-rm -rf nest*
-mkdir nest0
-mkdir nest1
-mkdir nest2
+rm -rf Watch*

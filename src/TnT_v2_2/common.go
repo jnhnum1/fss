@@ -1,10 +1,13 @@
-package TnT_v2_1
+package TnT_v2_2
 
 import (
 	"fmt"
 	"net/rpc"
 	"os"
 	"path/filepath"
+	"crypto/rand"
+	"math/big"
+	"strconv"
 )
 
 const (
@@ -27,30 +30,16 @@ const (
   	IN_CLOSE_ISDIR = 0x40000010
 )
 
-func DFT(dirname string, depth int) {
-    d, err := os.Open(dirname)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    defer d.Close()
-    fi, err := d.Readdir(-1)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    for _, fi := range fi {
-        if fi.Mode().IsRegular() {
-            spaces(depth)
-            fmt.Println(fi.Name(), "size:", fi.Size(), "modified:", fi.ModTime())
-        }
-        if fi.IsDir() {
-            spaces(depth)
-            //fmt.Println(fi.Name(), ":")
-            fmt.Println(fi.Name()+string(filepath.Separator), ":", fi.ModTime())
-            DFT(dirname+fi.Name()+string(filepath.Separator), depth+1)
-        }
-    }
+type NewData struct {
+	TmpName string
+	Path string
+	IsDir bool
+	Perm os.FileMode
+}
+
+type DelData struct {
+	Path string
+	IsDir bool
 }
 
 type GetVersionArgs struct{
@@ -176,6 +165,17 @@ func parent(path string) string {
 		}
 	}
 	return path[0:end+1]
+}
+
+func rand_string(n int) string {
+	max := big.NewInt(int64(1) << 62)
+	rstr := ""
+	for i:=0; i<n; i++ {
+		bigx, _ := rand.Int(rand.Reader, max)
+		x := bigx.Int64()
+		rstr += strconv.FormatInt(x, 16)
+	}
+	return rstr
 }
 
 // 'call' function from Labs :

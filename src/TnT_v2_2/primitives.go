@@ -1,4 +1,4 @@
-package TnT_v2_1
+package TnT_v2_2
 
 import (
 	"net"
@@ -8,7 +8,6 @@ import (
 	"encoding/gob"
 	"time"
 	"sync"
-	"fmt"
 )
 
 type FSnode struct {
@@ -27,6 +26,8 @@ type FSnode struct {
 type FStree struct {
 	LogicalTime int64
 	MyTree map[string] *FSnode
+	NewFiles []NewData
+	DelFiles []DelData
 }
 
 type TnTServer struct {
@@ -64,27 +65,6 @@ func (tnt *TnTServer) LiveAncestor(path string) string {
 		_, prt_present = fst[prt]
 	}
 	return prt
-}
-
-func spaces(depth int) {
-	for i:=0; i<depth; i++ {
-		fmt.Printf(" |")
-	}
-	fmt.Printf(" |---- ")
-}
-
-func (tnt *TnTServer) ParseTree(path string, depth int) {
-	fst := tnt.Tree.MyTree
-
-	if _, exists := fst[path]; exists {
-		spaces(depth)
-		fmt.Println(tnt.me, path, ":	", fst[path].LastModTime, "	", fst[path].VerVect, "	", fst[path].SyncVect, fst[path].Creator, fst[path].CreationTime)
-		if fst[path].IsDir {
-			for child, _ := range fst[path].Children {
-				tnt.ParseTree(child, depth+1)
-			}
-		}
-	}
 }
 
 func (tnt *TnTServer) GetFile(args *GetFileArgs, reply *GetFileReply) error {
@@ -125,39 +105,58 @@ func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) error {
 
 	args := &GetDirArgs{Path:path}
 	var reply GetDirReply
-	ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
-	if ok {
-		if reply.Err != nil {
-			log.Println(tnt.me, ": Error opening Directory:", reply.Err)
-		} else {
-			err := os.Mkdir(tnt.root + dest, reply.Perm)
-			if err != nil {
-				log.Println(tnt.me, ": Error writing file:", err)
-			}
+	for {
+		ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
+		if ok {
+			break
 		}
-	} else {
-		log.Println(tnt.me, ": GetDir RPC failed")
 	}
+
+	if reply.Err != nil {
+		log.Println(tnt.me, ": Error opening Directory:", reply.Err)
+	} else {
+		tnt.Tree.NewFiles = append(tnt.Tree.NewFiles, NewData{Path:dest, IsDir:true, Perm:reply.Perm})
+	}
+
 	return reply.Err
 }
 
-func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) error {
+func (tnt *TnTServer) CopyFileFromPeer(srv int, path string, dest string) (time.Time, error) {
 
 	args := &GetFileArgs{FilePath:path}
 	var reply GetFileReply
 
-	ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
-	if ok {
-		if reply.Err != nil {
-			log.Println(tnt.me, ": Error opening file:", reply.Err)
-		} else {
-			err := ioutil.WriteFile(tnt.root + dest, reply.Content, reply.Perm)
-			if err != nil {
-				log.Println(tnt.me, ": Error writing file:", err)
-			}
+	rand_name := rand_string(2)
+	var ts time.Time
+
+	for {
+		ok := call(tnt.servers[srv], "TnTServer.GetFile", args, &reply)
+		if ok {
+			break
 		}
-	} else {
-		log.Println(tnt.me, ": GetFile RPC failed")
+		time.Sleep(RPC_SLEEP_INTERVAL)
 	}
-	return reply.Err
+
+	if reply.Err != nil {
+		log.Println(tnt.me, ": Error opening file:", reply.Err)
+	} else {
+		err := ioutil.WriteFile(tnt.tmp + rand_name, reply.Content, reply.Perm)
+		if err != nil {
+			log.Println(tnt.me, ": Error writing file:", err)
+		} else {
+			tnt.Tree.NewFiles = append(tnt.Tree.NewFiles, NewData{TmpName:rand_name, Path: dest, IsDir:false, Perm: reply.Perm})
+		}
+		fi, err := os.Lstat(tnt.tmp + rand_name)
+		ts = fi.ModTime()
+	}
+
+	return ts, reply.Err
+}
+
+func (tnt *TnTServer) DeleteDir(path string) {
+	tnt.Tree.DelFiles = append(tnt.Tree.DelFiles, DelData{Path: path, IsDir: true})
+}
+
+func (tnt *TnTServer) DeleteFile(path string) {
+	tnt.Tree.DelFiles = append(tnt.Tree.DelFiles, DelData{Path: path, IsDir: false})
 }
