@@ -95,7 +95,7 @@ func SyncAll(nservers int, tnts []*TnT_v3.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, tnt *TnT_v3.TnTServer, root string){
+func EditDirectory(num_actions int, me int, root string){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
@@ -198,8 +198,8 @@ func EditDirectory(num_actions int, tnt *TnT_v3.TnTServer, root string){
         }
         time.Sleep(10 * time.Millisecond)
         if i%10 == 0 {
-          sync_with := rand.Intn(3)
-          if sync_with != tnt.me{
+          sync_with := rand.Intn(nservers)
+          if sync_with != me{
             tnt.SyncWrapper(sync_with,"./")
           }
         }
@@ -275,15 +275,13 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(200,tnts[0], common_root+strconv.Itoa(0)+"/")
-
     // for {
 
     // }
 
-    // for i:=0;i<1;i++{
-    //     go EditDirectory(5,tnts[i])
-    // }
+    for i:=0;i<1;i++{
+        EditDirectory(5,tnts[i], i, tnts common_root+strconv.Itoa(0)+"/")
+    }
 
     
 
