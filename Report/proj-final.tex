@@ -14,41 +14,11 @@ Deepak Vasisht \\ \normalsize deepakv@mit.edu
 
 \abstract{We build a peer-to-peer file-system synchronizer, based on \href{http://swtch.com/tra/}{Tra}, which is performant and resilient to system crashes. We implement our file-system synchronizer in Go and ensure that all the guarantees for a file synchronizer mentioned in Tra are satisfied. We handle the system going offline by storing the metadata on the disk and using a two-phase synchronization method to ensure that crashes do not effect the system adversely even if they happen during sync. \textcolor{red}{Slightly more stuff needed.}}
 
-\section {Introduction}
-We implement a Tra based file system synchronization system. Our implementation, by design, ensures all the desirable properties mentioned in the introduction of Tra,i.e. no restriction on synchronization patterns, no false conflicts, no metadata for deleted files, network usage proportional to changed files and partial synchronizations within the file tree. The key 
 
-\section{Goals}
-We plan to implement a file synchronization system based on \href{http://swtch.com/tra/}{Tra}. We plan to ensure that we achieve all the five objectives mentioned in the introduction of Tra Technical Report \cite{tra-tech-report}. We will implement multiple versions starting from a basic version that just ensures correctness (including Tra's ``no false conflicts'' guarantee) and optimize further for reduced network communication, and reduced metadata overhead. We plan to test it on up to 10 machines (or virtual machines, maybe on EC2) running concurrent updates to file systems.
-
-\section{System Design}
-
-\subsection{File Watcher}
-TnT has a method that allows the system to recognize when a user edits the directory.  In order to track the updates made by the user, TnT watches
-the directory in the background using a Linux package called Inotify.  TnT initially sets a watch on the desired directory from Inotify.  When a 
-user updates the file system in any way, they generate an event which is seen by the watcher.
-
-\subsection{Synchronization}
-
-\subsection{Failure Recovery}
-
-
-\section{Implementation Details}
-We will use Go for our implementation because of its good support for OS-level operations like watching the file system, high-level programming features, as well as our experience using Go in 6.824.\\
-
-\noindent We will iteratively improve our file synchronization system, starting with a minimum viable implementation.  In particular, for our first iteration we will only try to achieve correctness using essentially the same techniques (the Vector Time pair algorithm) as in the Tra, but we will not implement any nonessential optimizations.\\
-
-\noindent If we have more time, we will add the optimizations described in \cite{tra-tech-report}.
-
-\section{Project Evaluation}
-We will test the system developed on up to 10 concurrent machines for:
-\begin{itemize}\renewcommand{\labelitemi}{$\diamond$}
-\item {\bf Correctness}: We will test the case where machines modify disjoint sets of files, while reading all the files, and we will repeat this while changing the sets of files written by each machine, so that each file is at some point written by every machine.  There should be no conflicts in this scenario, so we will check this, as well as checking that each machine has the same copy of each file.  We will also check that whenever two machines concurrently update the same file in different ways, a conflict is reported.
-
-\item {\bf Metadata overhead}: the metadata used at any point of time should be proportional to the size of the file system tree. if files are deleted by all the synchronizing peers, they should not contribute to metadata.
-
-\item {\bf Communications overhead}: the communication used should be proportional to the number of files changed, and the sizes of the files. In particular, it should not be proportional to the size of the file system tree.
-\end{itemize}
-
+\input{introduction}
+\input{goals}
+\input{implementation_details}
+\input{project_evaluation}
 \begin{thebibliography}{1}
 \bibitem{tra-tech-report}
 \newblock Russ Cox, William Josephson.
