@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 	"strings"
+	"math/rand"
 )
 
 func (tnt *TnTServer) Apply() {
@@ -68,8 +69,13 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 		tnt.ParseTree("./", 0)
 		tnt.PrintTmp()
 		var a int
-		fmt.Scanf("%d", &a)
-		fmt.Println(a)
+
+		fmt.Println(tnt.Test)
+		if !tnt.Test {
+			fmt.Scanf("%d", &a)
+			fmt.Println(a)
+		}
+
 		tnt.Apply()
 		//fmt.Scanf("%d", &a)
 		tnt.LogToFile()
@@ -339,7 +345,17 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 			fmt.Println("Update-Update conflict on", path, ":", srv, "and", tnt.me, "have independently updated")
 			for choice != tnt.me && choice != srv {
 				fmt.Printf("Which version do you want (%d or %d)? ", tnt.me, srv)
-				fmt.Scanf("%d", &choice)
+				if !tnt.Test {
+					fmt.Scanf("%d", &choice)
+				} else {
+					rand.Seed( time.Now().UTC().UnixNano())
+					if rand.Intn(2) == 0 {
+						choice = tnt.me
+					} else {
+						choice = srv
+					}
+				}
+				
 			}
 			if choice == tnt.me {
 				action = DO_NOTHING

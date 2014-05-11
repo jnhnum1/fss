@@ -6,7 +6,7 @@ import (
   	//"log"
   	"os"
   	"strconv"
-  	"TnT_v2"
+  	"TnT_v3"
   	"path/filepath"
     "math/rand"
     "time"
@@ -29,7 +29,7 @@ func port(tag string, host int) string {
   	return s
 }
 
-func cleanup(tnts []*TnT_v2.TnTServer) {
+func cleanup(tnts []*TnT_v3.TnTServer) {
   	for i:=0; i < len(tnts); i++ {
     	tnts[i].Kill()
   	}
@@ -58,10 +58,10 @@ func parent(path string) string {
     return path[0:end+1]
 }
 
-func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
+func setup(tag string, nservers int) ([]*TnT_v3.TnTServer, func()) {
 
   	var peers []string = make([]string, nservers)
-  	var tnts []*TnT_v2.TnTServer = make([]*TnT_v2.TnTServer, nservers)
+  	var tnts []*TnT_v3.TnTServer = make([]*TnT_v3.TnTServer, nservers)
 
   	for i:=0; i<nservers; i++ {
     	peers[i] = port(tag, i)
@@ -73,7 +73,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
         os.RemoveAll(common_root+strconv.Itoa(i)+"/")
         os.Remove("../Tests/WatchLog"+strconv.Itoa(i))
         os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
-  	    tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
+  	    tnts[i]=TnT_v3.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/", true)
 
   	    fmt.Println("Initialize Watcher on ", strconv.Itoa(i))
 
@@ -85,7 +85,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
   	return tnts, clean
 }
 
-func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
+func SyncAll(nservers int, tnts []*TnT_v3.TnTServer){
 
     for i := 0; i<nservers; i++ {
         for j := 0; i<nservers; i++ {
@@ -95,7 +95,7 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
+func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v3.TnTServer){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
@@ -197,6 +197,12 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             
         }
         time.Sleep(10 * time.Millisecond)
+        if i%10 == 0 {
+          sync_with := rand.Intn(nservers)
+          if sync_with != me{
+            tnt.SyncWrapper(sync_with,"./")
+          }
+        }
     }
 }
 
@@ -269,15 +275,13 @@ func main() {
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
-    EditDirectory(500,tnts[0], common_root+strconv.Itoa(0)+"/")
-
     // for {
 
     // }
 
-    // for i:=0;i<1;i++{
-    //     go EditDirectory(5,tnts[i])
-    // }
+    for i:=0; i<1; i++ {
+        EditDirectory(25, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
+    }
 
     
 

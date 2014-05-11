@@ -54,33 +54,33 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream") && !strings.Contains(ev.Name,strings.TrimSuffix(tnt.tmp, "/"))) {
                     if(ev.Mask != IN_CLOSE && ev.Mask != IN_OPEN && ev.Mask != IN_OPEN_ISDIR && ev.Mask != IN_CLOSE_ISDIR){
-                    fmt.Println("event: ", ev)
-                    fi, err := os.Lstat(ev.Name)
-                    key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
+						fmt.Println("event: ", ev)
+						fi, err := os.Lstat(ev.Name)
+						key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
 
-                    //fmt.Println("ev: ", ev, key_path)
+						//fmt.Println("ev: ", ev, key_path)
 
-                    if err == nil {
-                        if fi.IsDir(){
-                            tnt.FST_set_watch(ev.Name, watcher)
-                            key_path = key_path + "/"
-                        }
-                    } else if fst[key_path + "/"] != nil {
-                        key_path = key_path + "/"
-                    } else if fst[key_path] != nil{
-                        fmt.Println("this is a file")
-                    } else {
-                        fmt.Println("what am i doing", err, fst[key_path])
-                    }
+						update := true
 
-                    //fmt.Println("key to update", key_path)
-                    //if(fst[key_path] != nil || err == nil){
-					tnt.mu.Lock()
-					tnt.UpdateTreeWrapper(key_path)
-					tnt.mu.Unlock()
-                    //}   
+						if err == nil {
+							if fi.IsDir(){
+								tnt.FST_set_watch(ev.Name, watcher)
+								key_path = key_path + "/"
+							}
+						} else if fst[key_path + "/"] != nil {
+							key_path = key_path + "/"
+						} else if fst[key_path] != nil{
+							//fmt.Println("this is a file")
+						} else {
+							//fmt.Println("what am i doing", err, fst[key_path])
+							update = false
+						}
 
-                    
+						if update {
+							tnt.mu.Lock()
+							tnt.UpdateTreeWrapper(key_path)
+							tnt.mu.Unlock()
+	                    }
                     }
                 }
 
