@@ -97,7 +97,7 @@ func SyncAll(nservers int, tnts []*TnT_v3.TnTServer){
 
 }
 
-func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v3.TnTServer, c chan){
+func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_v3.TnTServer, c chan int){
     fmt.Println("Edit Directory ...")
 
     rand.Seed( time.Now().UTC().UnixNano())
