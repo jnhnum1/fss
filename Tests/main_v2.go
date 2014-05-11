@@ -9,6 +9,7 @@ import (
   	"TnT_v2"
   	"path/filepath"
     "math/rand"
+    "time"
 )
 
 const (
@@ -93,6 +94,8 @@ func SyncAll(nservers int, tnts []*TnT_v2.TnTServer){
 }
 
 func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
+    fmt.Println("Edit Directory ...")
+
     fst := tnt.Tree.MyTree
 
     rand.Seed(42)
@@ -142,6 +145,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
             }
             
         }
+        time.Sleep(100 * time.Millisecond)
     }
 
 
