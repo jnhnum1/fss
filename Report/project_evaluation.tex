@@ -1,0 +1,9 @@
+\section{Project Evaluation}
+We will test the system developed on up to 10 concurrent machines for:
+\begin{itemize}\renewcommand{\labelitemi}{$\diamond$}
+\item {\bf Correctness}: We will test the case where machines modify disjoint sets of files, while reading all the files, and we will repeat this while changing the sets of files written by each machine, so that each file is at some point written by every machine.  There should be no conflicts in this scenario, so we will check this, as well as checking that each machine has the same copy of each file.  We will also check that whenever two machines concurrently update the same file in different ways, a conflict is reported.
+
+\item {\bf Metadata overhead}: the metadata used at any point of time should be proportional to the size of the file system tree. if files are deleted by all the synchronizing peers, they should not contribute to metadata.
+
+\item {\bf Communications overhead}: the communication used should be proportional to the number of files changed, and the sizes of the files. In particular, it should not be proportional to the size of the file system tree.
+\end{itemize}

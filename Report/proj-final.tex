@@ -1,0 +1,29 @@
+\input{my-main-template}
+
+\begin{document}
+
+\title{TnT : A file system synchronizer \footnote{{\bf TnT} stands for ``{\bf T}nT is {\bf n}ot {\bf T}ra''}}
+\author{
+Justin Holmgren \\ \normalsize holmgren@mit.edu \and
+Zach Kabelac \\ \normalsize zek@mit.edu \and
+Pritish Kamath \\ \normalsize pritish@mit.edu\and
+Deepak Vasisht \\ \normalsize deepakv@mit.edu
+}
+
+\maketitle
+
+\abstract{We build a peer-to-peer file-system synchronizer, based on \href{http://swtch.com/tra/}{Tra}, which is performant and resilient to system crashes. We implement our file-system synchronizer in Go and ensure that all the guarantees for a file synchronizer mentioned in Tra are satisfied. We handle the system going offline by storing the metadata on the disk and using a two-phase synchronization method to ensure that crashes do not effect the system adversely even if they happen during sync. \textcolor{red}{Slightly more stuff needed.}}
+
+
+\input{introduction}
+\input{goals}
+\input{system_design}
+\input{implementation_details}
+\input{project_evaluation}
+\begin{thebibliography}{1}
+\bibitem{tra-tech-report}
+\newblock Russ Cox, William Josephson.
+\newblock \href{http://publications.csail.mit.edu/tmp/MIT-CSAIL-TR-2005-014.pdf}{Tra Technical report}
+\end{thebibliography}
+
+\end{document}
