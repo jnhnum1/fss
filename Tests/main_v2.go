@@ -136,7 +136,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer,){
         "Delete_File",
         "Modify_File",
         "Move_Up",
-        "Move_Down"
+        "Move_Down",
     }
     cur_dir := tnt.root
 
