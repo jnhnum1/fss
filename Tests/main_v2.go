@@ -283,7 +283,7 @@ func main() {
         EditDirectory(25, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
     }
 
-    
+    SyncAll(nservers, tnts)
 
 }
 
