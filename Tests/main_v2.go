@@ -113,7 +113,7 @@ func EditDirectory(num_actions int, tnt *TnT_v2.TnTServer, root string){
         this_action := action_list[rand.Intn(len(action_list))]
         // this_action := "Move_Down"
         
-        key_path := "./"+strings.TrimPrefix(cur_dir,root)
+        //key_path := "./"+strings.TrimPrefix(cur_dir,root)
         //fmt.Println(cur_dir, key_path)
 
         if this_action == "Create_Dir" {
