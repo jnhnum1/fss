@@ -34,7 +34,7 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 		tnt.PropagateUp(fst[path].VerVect, fst[path].SyncVect, fst[path].Parent)
 	} else {
 		if path != "./" {
-			prt := parent(path)
+			prt := tnt.LiveAncestor(path)
 			fst[prt].VerVect[tnt.me] = tnt.Tree.LogicalTime
 			fst[prt].SyncVect[tnt.me] = tnt.Tree.LogicalTime
 			tnt.PropagateUp(fst[prt].VerVect, fst[prt].SyncVect, fst[prt].Parent)

@@ -173,7 +173,7 @@ func rand_string(n int) string {
 	for i:=0; i<n; i++ {
 		bigx, _ := rand.Int(rand.Reader, max)
 		x := bigx.Int64()
-		rstr += strconv.FormatInt(x, 16)
+		rstr += strconv.FormatInt(x, 36)
 	}
 	return rstr
 }
