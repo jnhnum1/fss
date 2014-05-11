@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 	"strings"
+	"rand"
 )
 
 func (tnt *TnTServer) Apply() {
