@@ -192,5 +192,36 @@ func main() {
   		os.Exit(1)
   	}
 
+    fmt.Println("Test: Randomly Create Directories and Files ...")
+
+    action_list := [] string {
+        "Create_Dir"
+        "Delete_Dir"
+        "Create_File"
+        "Delete_File"
+        "Modify_File"
+    }
+
+    for i := 0; i<3 i++ {
+        this_action := action_list[rand.Intn(len(action_list))]
+        fmt.Println(this_action)
+        if this_action == "Create_Dir" {
+            fmt.Println("Creating Directory")
+
+
+        } else if this_action == "Delete_Dir" {
+            fmt.Println("Deleting Directory")
+
+        } else if this_action == "Create_File" {
+            fmt.Println("Creating File")
+
+        } else if this_action == "Delete_File" {
+            fmt.Println("Deleting File")
+
+        } else if this_action == "Modify_File" {
+            fmt.Println("Modifying File")
+        }
+    }
+
 }
 
