@@ -101,7 +101,7 @@ func setup(tag string, nservers int) ([]*TnT_v2.TnTServer, func()) {
         //tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
 
         os.RemoveAll(common_root+strconv.Itoa(i)+"/")
-        os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
+        os.Remove("../Tests/WatchLog"+strconv.Itoa(i))
         os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
   	    tnts[i]=TnT_v2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i))
 
