@@ -8,7 +8,7 @@ import (
   	"strconv"
   	"TnT_v2"
   	"path/filepath"
-    "rand"
+    "math/rand"
 )
 
 const (
@@ -195,7 +195,7 @@ func main() {
     fmt.Println("Test: Randomly Create Directories and Files ...")
 
     rand.Seed(42)
-    action_list := [] string {
+    action_list := [] string{
         "Create_Dir",
         "Delete_Dir",
         "Create_File",
