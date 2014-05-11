@@ -197,6 +197,12 @@ func EditDirectory(num_actions int, tnt *TnT_v3.TnTServer, root string){
             
         }
         time.Sleep(10 * time.Millisecond)
+        if i%10 == 0 {
+          sync_with := rand.Intn(3)
+          if sync_with != tnt.me{}
+            tnt.SyncWrapper(sync_with,"./")
+          }
+        }
     }
 }
 
