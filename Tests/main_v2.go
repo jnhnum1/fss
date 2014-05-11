@@ -280,7 +280,7 @@ func main() {
     // }
 
     for i:=0; i<nservers; i++ {
-        EditDirectory(250, nservers, i, common_root+strconv.Itoa(0)+"/", tnts[i])
+        EditDirectory(250, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i])
     }
 
     SyncAll(nservers, tnts)
