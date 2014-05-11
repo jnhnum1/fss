@@ -131,11 +131,13 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
 
     action_list := [] string{
         "Create_Dir",
+        "Create_Dir",
         "Delete_Dir",
         "Create_File",
         "Delete_File",
         "Modify_File",
         "Move_Up",
+        "Move_Down",
         "Move_Down",
     }
 
@@ -326,7 +328,7 @@ func main() {
     }
     
     SyncAll(nservers, tnts)
-    for i:=1;i<nservers;i++{
+    for i:=0;i<nservers;i++{
     	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/",0,"")))
     }
 }
