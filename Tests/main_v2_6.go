@@ -6,7 +6,7 @@ import (
   //"log"
   "os"
   "strconv"
-  "TnT_v2_3"
+  "TnT_final"
   //"path/filepath"
 )
 
@@ -25,25 +25,25 @@ func port(tag string, host int) string {
   return s
 }
 
-func cleanup(tnt *TnT_v2_3.TnTServer) {
+func cleanup(tnt *TnT_final.TnTServer) {
 	tnt.Kill()
 }
 
 
 
-func setup(tag string, nserver int,nservers int) (*TnT_v2_3.TnTServer, func()) {
+func setup(tag string, nserver int,nservers int) (*TnT_final.TnTServer, func()) {
 
 	var peers []string = make([]string, nservers)
-	var tnt *TnT_v2_3.TnTServer = new(TnT_v2_3.TnTServer)
+	var tnt *TnT_final.TnTServer = new(TnT_final.TnTServer)
 
 /*	for i:=0; i<nservers; i++ {
 		peers[i] = port(tag, i)
 	}
-*/	peers[0]="128.30.5.191"
-	peers[1]="18.9.64.13"
+*/	peers[0]="128.31.34.232"
+	peers[1]="128.30.31.206"
 
 
-	tnt=TnT_v2_3.StartServer(peers, nserver, common_root+"nest"+strconv.Itoa(nserver)+"/", "WatchLog"+strconv.Itoa(nserver), common_root+"tmp"+strconv.Itoa(nserver)+"/", false)
+	tnt=TnT_final.StartServer(peers, nserver, common_root+"nest"+strconv.Itoa(nserver)+"/", "WatchLog"+strconv.Itoa(nserver), common_root+"tmp"+strconv.Itoa(nserver)+"/", false)
 	
 
 	clean := func() { (cleanup(tnt)) }
