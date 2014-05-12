@@ -25,7 +25,9 @@ const (
 func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) error {
 
 	//fmt.Println("Syncing ", args, tnt)
+	tnt.mu.Lock()
 	tnt.UpdateTreeWrapper("./") //ToDo: We should be more specific?
+	tnt.mu.UnLock()
 
 	fst := tnt.Tree.MyTree
 	fsn, present := fst[args.Path]
@@ -111,7 +113,9 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
 		tnt.LogToFile()
 		tnt.mu.Unlock()
 	}
+	tnt.mu.Lock()
 	tnt.UpdateTreeWrapper("./")
+	tnt.mu.Unlock()
 	fmt.Println("in start server",tnt.Tree)
 
 	// RPC set-up borrowed from Lab
