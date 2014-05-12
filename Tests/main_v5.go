@@ -257,7 +257,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
     if err != nil {
         panic(err)
     }
-    info := [] int64 {WatchLog.Size(), deletes, creates}
+    info := [] int64 {WatchLog.Size(), *deletes, *creates}
 
 
     var text string
@@ -267,7 +267,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
     if _, err = f.WriteString(text); err != nil {
         panic(err)
     }
-    
+
 }
 
 func main() {
