@@ -248,11 +248,6 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
     fmt.Println(me, " am done ...")
     c <- 1
 
-    f, err := os.OpenFile("MetaData"+strconv.Itoa(me), os.O_APPEND|os.O_WRONLY, 0600)
-    if err != nil {
-        panic(err)
-    }
-
     WatchLog, err := os.Lstat("WatchLog"+strconv.Itoa(me))
     if err != nil {
         panic(err)
