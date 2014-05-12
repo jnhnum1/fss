@@ -96,9 +96,9 @@ func (tnt *TnTServer) UpdateTree(path string) {
 		// fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime // set outside - unconditionally
 	}
 
-	fmt.Println(tnt.me, "UPDATE TREE: increment SyncVect[tnt.me] at", path, fst[path].SyncVect, "before")
+	//fmt.Println(tnt.me, "UPDATE TREE: increment SyncVect[tnt.me] at", path, fst[path].SyncVect, "before")
 	fst[path].SyncVect[tnt.me] = tnt.Tree.LogicalTime
-	fmt.Println(tnt.me, "UPDATE TREE: increment SyncVect[tnt.me] at", path, fst[path].SyncVect, "after")
+	//fmt.Println(tnt.me, "UPDATE TREE: increment SyncVect[tnt.me] at", path, fst[path].SyncVect, "after")
 
 	if fi.IsDir() == false {
 		if fst[path].LastModTime.Equal(fi.ModTime()) == false {
