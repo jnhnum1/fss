@@ -1,6 +1,6 @@
 \section{System Design}
 
-Tra introduced the novel idea of {\em vector time pairs}, which allows Tra to provide very strong guarantees such as {\em no false positives} and {\em no meta-data for deleted files} among others. Our main system design is completely modelled after Tra.  In order to ensure robustness and resilience to crashes, we create additional mechanisms as well. On a high level, TnT's design can be understood in terms of two main primitives: first, we implement a File Watcher on based on inotify to keep checking for file system updates when Tra is online, secondly, in cases when Tra comes back online after a crash, it recovers its metadata from the disk and checks if any modifications have been made when TnT was offline.  We discuss these core aspects of our system below.
+Tra introduced the novel idea of {\em vector time pairs}, which allows Tra to provide very strong guarantees such as {\em no false positives} and {\em no meta-data for deleted files} among others. Our main system design is completely modelled after Tra.  In order to ensure robustness and resilience to crashes, we create additional mechanisms as well. On a high level, TnT's design can be understood in terms of two main primitives: first, we implement a File Watcher based on inotify to keep checking for file system updates when Tra is online, secondly, in cases when Tra comes back online after a crash, it recovers its metadata from the disk and checks if any file system modifications have been made when TnT was offline.  We discuss these core aspects of our system below.
 
 \subsection{File Watcher}
 TnT structures synchronization meta-data in the form of a {\em tree}, which stores modification histories and synchronization histories for every file/directory in the file system. We use the \href{http://godoc.org/code.google.com/p/go.exp/inotify}{\tt inotify} linux package, that allows the system to recognize when a user makes changes to the file system (such as creates/edits/deletes of files/directories) in an interrupt based manner. This allows us to keep the meta-data up-to-date with the latest state of the file system.
@@ -13,7 +13,7 @@ Along the lines of Tra, we consider only one-directional synchronization. Any tw
 \subsection{Failure Recovery} \label{subsec:failure}
 We use a two-phase synchronization method to ensure that crashes do not affect the consistency of the system, even if they happen during sync. The synchronization scheme goes through the following steps:
 \begin{enumerate}
-\item Update your metadata and record the changes in the current sync. Move files to the temporary directory and mark files to be deleted.
+\item Update your metadata and record the changes to be made due to the current sync. Move files from the remote machine to the temporary directory and mark files to be deleted.
 \item Dump the metadata to the disk.
 \item Apply the recorded changes in the log and move files from the temporary directory to the working directory. Delete the files to be deleted.
 \item Dump the metadata to disk.
@@ -22,5 +22,5 @@ This synchronization mechanism, on a crash, recovers the metadata from the disk 
 While recovering from a crash, TnT reads the filesystem state and figures out if any files have been modified since the last crash and updates their version vectors if that is the case. This feature is enabled by explicitly tracking the last modified time of each file and directory in the metadata.
 
 \subsection{Meta-data costs}
-We do not
+We managed to remove the metadata costs for deleted files. We had to seek help from Russ Cox to understand why his scheme works for avoiding meta data costs for deleted files and directories. Briefly, the synchronization vectors for a deleted file is the same as the nearest live ancestor and the modification vector need not be stored if we have creation time and the creator for the file stored in the meta-data. This helps us reduce the cost of storing meta-data as shown in the Results section. However, we do not implement the incremental version vectors and synchronization vectors that Tra does, so our meta-data scales worse than Tra.
 
