@@ -3,7 +3,7 @@ package TnT_final
 import (
     "code.google.com/p/go.exp/inotify"
     "log"
-    "fmt"
+    //"fmt"
     "os"
     "strings"
 )
@@ -39,7 +39,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println(dirname)
+    //fmt.Println(dirname)
     //Set watch on /tmp folder for transfers
     tnt.FST_set_watch(tnt.tmp, watcher)
     tnt.FST_set_watch(dirname, watcher)
@@ -54,7 +54,7 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
                 //track of file modifications
                 if(!strings.Contains(ev.Name, ".swp") && !strings.Contains(ev.Name, ".swx") && !strings.Contains(ev.Name, "~") && !strings.Contains(ev.Name, ".goutputstream") && !strings.Contains(ev.Name,strings.TrimSuffix(tnt.tmp, "/"))) {
                     if(ev.Mask != IN_CLOSE && ev.Mask != IN_OPEN && ev.Mask != IN_OPEN_ISDIR && ev.Mask != IN_CLOSE_ISDIR){
-						fmt.Println("event: ", ev)
+						//fmt.Println("event: ", ev)
 						fi, err := os.Lstat(ev.Name)
 						key_path := "./"+strings.TrimPrefix(ev.Name,tnt.root)
 

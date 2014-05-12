@@ -12,7 +12,7 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
 	//Propagate the changes in a version vector upwards
 
 	fst := tnt.Tree.MyTree // for ease of code
-	tnt.ParseTree("./",0)
+	//tnt.ParseTree("./",0)
 
 	setMaxVersionVect(fst[path].VerVect, VersionVector)
 	setMinVersionVect(fst[path].SyncVect, SyncVector)
