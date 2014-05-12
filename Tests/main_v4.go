@@ -12,6 +12,7 @@ import (
     "time"
     //"syscall"
     "io/ioutil"
+    "hash/fnv"
 )
 
 const (
@@ -35,6 +36,38 @@ func cleanup(tnts []*TnT_v2_2.TnTServer) {
   	}
 }
 
+func DFT(dirname string, depth int ,str string)string {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+           str=str+fi.Name()
+        }
+        if fi.IsDir() {
+  			str=str+fi.Name()
+            str=DFT(dirname+fi.Name()+string(filepath.Separator), depth+1,str)
+        }else{
+		data,_:=ioutil.ReadFile(dirname+fi.Name())
+        	str=str+string(data)
+        }
+    }
+    return str
+}
+
+func hash(s string) uint32 {
+  h := fnv.New32a()
+  h.Write([]byte(s))
+  return h.Sum32()
+}
 
 func parent(path string) string {
     /*
@@ -98,11 +131,13 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
 
     action_list := [] string{
         "Create_Dir",
+        "Create_Dir",
         "Delete_Dir",
         "Create_File",
         "Delete_File",
         "Modify_File",
         "Move_Up",
+        "Move_Down",
         "Move_Down",
     }
 
@@ -193,7 +228,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
         }
         
         
-        time.Sleep(10 * time.Millisecond)
+        //time.Sleep(10 * time.Millisecond)
     }
     fmt.Println(me, " am done ...")
     c <- 1
@@ -201,7 +236,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
 
 func main() {
 
-  	const nservers = 3
+  	const nservers = 5
 
 
   	//printfiles(nservers)
@@ -275,10 +310,10 @@ func main() {
     }
     //c := make(chan int)
     stop_all := make(chan int)
-    for j:=1;j<6;j++{
+    for j:=1;j<100;j++{
       for i:=0; i<nservers; i++ {
 
-          go EditDirectory(25, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
+          go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
       }
       for i:=0;i<nservers;i++{
           <-c[i]
@@ -293,5 +328,8 @@ func main() {
     }
     
     SyncAll(nservers, tnts)
+    for i:=0;i<nservers;i++{
+    	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/",0,"")))
+    }
 }
 
