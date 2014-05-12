@@ -1,4 +1,4 @@
-package TnT_v3
+package TnT_v4
 
 import (
 	"fmt"
@@ -114,20 +114,21 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
 	fmt.Println("in start server",tnt.Tree)
 
 	go tnt.FST_watch_files(tnt.root)
-	
-	//RPC setup for TCP
+	//RPC TCP
 	rpc.Register(tnt)
     rpc.HandleHTTP()
     l, e := net.Listen("tcp", ":1235")
     tnt.l=l
-    if e != nil {
-      log.Fatal("listen error:", e)
-    } else {
-      defer l.Close()
-      fmt.Println("listening for requests...")
-	  go http.Serve(l, nil)
-    }
-
+	go func(){
+	    if e != nil {
+    	  log.Fatal("listen error:", e)
+    	  
+	    } else {
+	          defer l.Close()
+    	  fmt.Println("listening for requests...")
+		  http.Serve(l, nil)
+    	}
+	}()
 	// RPC set-up borrowed from Lab
 	//rpcs := rpc.NewServer()
 	//rpcs.Register(tnt)
