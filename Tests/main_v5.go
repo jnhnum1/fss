@@ -262,7 +262,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
 
     var text string
 
-    text = strconv.Itoa(info)
+    text = strconv.Itoa(int(info))
 
     if _, err = f.WriteString(text); err != nil {
         panic(err)
