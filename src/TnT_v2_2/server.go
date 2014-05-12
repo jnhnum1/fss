@@ -27,7 +27,7 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
 	//fmt.Println("Syncing ", args, tnt)
 	tnt.mu.Lock()
 	tnt.UpdateTreeWrapper("./") //ToDo: We should be more specific?
-	tnt.mu.UnLock()
+	tnt.mu.Unlock()
 
 	fst := tnt.Tree.MyTree
 	fsn, present := fst[args.Path]
