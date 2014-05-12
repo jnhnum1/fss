@@ -1,16 +1,13 @@
 package main
 
 import (
-  	//"bufio"
   	"fmt"
-  	//"log"
   	"os"
   	"strconv"
   	"TnT_v2_2"
   	"path/filepath"
     "math/rand"
     "time"
-    //"syscall"
     "io/ioutil"
     "hash/fnv"
 )
@@ -115,15 +112,21 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
 func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
     for i := 0; i<nservers; i++ {
-        tnts[0].SyncWrapper(i,"./")
+        if i != 0 {
+          tnts[0].SyncWrapper(i,"./")
+        }
     }
 
     for i := 0; i<nservers; i++ {
-        tnts[i].SyncWrapper(0,"./")
+        if i != 0 {
+          tnts[i].SyncWrapper(0,"./")
+        }
     }
 
     for i := 0; i<nservers; i++ {
-        tnts[0].SyncWrapper(i,"./")
+        if i != 0 {
+            tnts[0].SyncWrapper(i,"./")
+        }
     }
 
     // for i := 0; i<nservers; i++ {
@@ -281,37 +284,39 @@ func main() {
   	
 
   	
-  	var test_count int = 0
-  	fmt.Println("Test: Sync File ...")	
+ //  	var test_count int = 0
+ //  	fmt.Println("Test: Sync File ...")	
 
-  	//Create file on nest0
-  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
-  	os.Create(file_name)
+ //  	//Create file on nest0
+ //  	file_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+".txt"
+ //  	os.Create(file_name)
 
-  	//Sync all servers
-	SyncAll(nservers, tnts)
+ //  	//Sync all servers
+	// SyncAll(nservers, tnts)
 
-  	//Check that file is in nest1, Open throws error is file does not exist
-  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
-  	if err != nil {
-  		fmt.Println("File Transfer Failed")
-  		os.Exit(1)
-  	}
+ //  	//Check that file is in nest1, Open throws error is file does not exist
+ //  	_,err := os.Open(common_root+strconv.Itoa(1)+"/"+strconv.Itoa(test_count)+".txt")
+ //  	if err != nil {
+ //  		fmt.Println("File Transfer Failed")
+ //  		os.Exit(1)
+ //  	}
 
 
-  	fmt.Println("Test: Sync Folder ...")
-  	test_count++
-  	//Create folder on nest0
-  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
-  	os.Mkdir(folder_name, 0777)
+ //  	fmt.Println("Test: Sync Folder ...")
+ //  	test_count++
+ //  	//Create folder on nest0
+ //  	folder_name := common_root+strconv.Itoa(0)+"/"+strconv.Itoa(test_count)+"/"
+ //  	os.Mkdir(folder_name, 0777)
+
+ //    SyncAll(nservers, tnts)
+
+ //  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
+ //  	if err != nil {
+ //  		fmt.Println("Folder Transfer Failed")
+ //  		os.Exit(1)
+ //  	}
 
     SyncAll(nservers, tnts)
-
-  	_,err = os.Open(common_root+strconv.Itoa(2)+"/"+strconv.Itoa(test_count)+"/")
-  	if err != nil {
-  		fmt.Println("Folder Transfer Failed")
-  		os.Exit(1)
-  	}
 
     fmt.Println("Test: Randomly Create Directories and Files ...")
  
