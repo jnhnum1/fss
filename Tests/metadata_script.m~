@@ -1,0 +1,11 @@
+all_data = [VarName2,VarName3,VarName4,VarName5];
+
+clear final_data
+count = zeros
+for ii = 1:size(all_data,1)
+    for jj = 1:4
+        if(jj == all_data(ii,1))
+            final_data(ii,:,jj) = all_data(ii,:);
+        end
+    end
+end

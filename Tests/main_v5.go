@@ -283,10 +283,10 @@ func main() {
 
     SyncAll(nservers, tnts)
 
-    for j:=0;j<50;j++{
+    for j:=0;j<500;j++{
       for i:=0; i<nservers; i++ {
 
-          go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all, &creates[i], &deletes[i])
+          go EditDirectory(20, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all, &creates[i], &deletes[i])
       }
 
       for i:=0;i<nservers;i++{
