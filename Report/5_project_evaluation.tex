@@ -10,7 +10,8 @@ The test updates a machine's files in a variety of ways on any branch of its dir
 The test has the machines update their file directories 200 times, then it synchronizes two randomly selected machines.  The process of update then synchronize occurs 100 times totaling 100,000 directory updates per test.  We ran this test 10 times and our results show that the hashes are the same for each of the 10 experiments.
 
 
-\item {\bf Metadata overhead}: For efficient operation, the metadata used at any point of time should be proportional to the size of the file system tree. When files are deleted by all the synchronizing peers, they should not contribute to metadata.  To test whether the metadata overhead does in fact scale with the size of the file system, we measure the size of metadata for a machine over time as well as the number of files created.  
+\item {\bf Metadata overhead}: For efficient operation, the metadata used at any point of time should be proportional to the size of the file system tree. When files are deleted by all the synchronizing peers, they should not contribute to metadata.  To test whether the metadata overhead does in fact scale with the size of the file system, we measure the size of metadata for a machine over time against the number of files created.  The measurement is taken during a normal experiment of with 5 machines where files and directories are randomly created and deleted.  
 
+Fig.??? shows TnT's metadata versus the number of files created.  The relationship between the metadata size and the number of files created is sub-linear as shown by shape of the curve.  This indicates that as the number of files and directories created increases, the size of the metadata does not increase at the same rate.  Initially, many files/directories are created and few are deleted which explains the sharp curve.  
 
 \end{itemize}
