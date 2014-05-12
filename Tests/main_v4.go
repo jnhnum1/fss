@@ -111,24 +111,21 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
 
 func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
-    for i := 0; i<nservers; i++ {
-        if i != 0 {
-          tnts[0].SyncWrapper(i,"./")
-        }
+    for i := 1; i<nservers; i++ {
+		tnts[0].SyncWrapper(i,"./")
     }
 
-    for i := 0; i<nservers; i++ {
-        if i != 0 {
-          tnts[i].SyncWrapper(0,"./")
-        }
+    for i := 1; i<nservers; i++ {
+		tnts[i].SyncWrapper(0,"./")
     }
 
-    for i := 0; i<nservers; i++ {
-        if i != 0 {
-            tnts[0].SyncWrapper(i,"./")
-        }
+    for i := 1; i<nservers; i++ {
+		tnts[0].SyncWrapper(i,"./")
     }
 
+    for i := 1; i<nservers; i++ {
+		tnts[i].SyncWrapper(0,"./")
+    }
     // for i := 0; i<nservers; i++ {
     //     for j := 0; j<nservers; j++ {
     //         if j != i {
