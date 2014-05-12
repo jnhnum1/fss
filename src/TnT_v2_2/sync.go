@@ -181,7 +181,10 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			newSyncVect[i] = END_OF_WORLD
 		}
 
+		was_child := false
+
 		for k, _ := range fst[path].Children {
+			was_child = true
 			var c_exists bool
 			var c_verVect map[int]int64
 			var c_syncVect map[int]int64
@@ -197,9 +200,11 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 				setMinVersionVect(newSyncVect, c_syncVect)
 			}
 		}
+
 		for k, _ := range reply.Children {
 			_, present := fst[path].Children[k]
 			if present == false {
+				was_child = true
 				var c_exists bool
 				var c_verVect map[int]int64
 				var c_syncVect map[int]int64
@@ -218,8 +223,12 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		}
 		fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
 		//setVersionVect(fst[path].VerVect, reply.VerVect)
-		setVersionVect(fst[path].SyncVect, newSyncVect)
-		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+		if was_child == true {
+			setVersionVect(fst[path].SyncVect, newSyncVect)
+			setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
+		} else {
+			setVersionVect(fst[path].SyncVect, reply.SyncVect)
+		}
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
 		exists = true
 	} else /* action == SYNC_DOWN */ {
