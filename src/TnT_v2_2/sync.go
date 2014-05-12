@@ -51,6 +51,7 @@ func (tnt *TnTServer) Apply() {
 
 func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 	//Update tree and then sync
+	fmt.Println(tnt.me, "SYNC FROM", srv, "on path:", path)
 	tnt.mu.Lock()
 	defer tnt.mu.Unlock()
 
