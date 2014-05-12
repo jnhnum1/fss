@@ -253,12 +253,11 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
         panic(err)
     }
 
-    WatchLog, err := os.Lstat("WatchLog"+strconv.Itoa(me), os.O_APPEND|os.O_WRONLY, 0600)
+    WatchLog, err := os.Lstat("WatchLog"+strconv.Itoa(me))
     if err != nil {
         panic(err)
     }
-    defer WatchLog.Close()
-    //info := [WatchLog.Size(), deletes, creates]
+    info := [WatchLog.Size(), deletes, creates]
 
 
     var text string
