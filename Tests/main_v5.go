@@ -257,12 +257,12 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
     if err != nil {
         panic(err)
     }
-    info := [] int64 {WatchLog.Size(), *deletes, *creates}
+    info := [] int {int(WatchLog.Size()), int(*deletes), int(*creates)}
 
 
     var text string
 
-    text = strconv.Itoa(int(info))
+    text = strconv.Itoa(info)
 
     if _, err = f.WriteString(text); err != nil {
         panic(err)
