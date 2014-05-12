@@ -36,6 +36,33 @@ func cleanup(tnts []*TnT_v2_2.TnTServer) {
   	}
 }
 
+func DFT(dirname string, depth int ,str string)string {
+    d, err := os.Open(dirname)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    defer d.Close()
+    fi, err := d.Readdir(-1)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+    for _, fi := range fi {
+        if fi.Mode().IsRegular() {
+           str=str+fi.Name()
+        }
+        if fi.IsDir() {
+        str=str+fi.Name()
+            str=DFT(dirname+fi.Name()+string(filepath.Separator), depth+1,str)
+        }else{
+    data,_:=ioutil.ReadFile(dirname+fi.Name())
+          str=str+string(data)
+        }
+    }
+    return str
+}
+
 func hash(s string) uint32 {
   h := fnv.New32a()
   h.Write([]byte(s))
@@ -136,7 +163,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             dir_name := cur_dir+strconv.Itoa(my_num)+"/"
             os.Mkdir(dir_name, 0777)
             fmt.Println("Creating Directory ", dir_name)
-            creates++
+            creates = creates + 1
 
         } else if this_action == "Delete_Dir" {      
 
@@ -149,7 +176,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
                 if file.IsDir() {
                     os.RemoveAll(cur_dir + new_file_name + "/")
                     fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
-                    deletes++
+                    deletes = deletes + 1
                     break
                 }
             }
@@ -158,7 +185,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             file_name := cur_dir+strconv.Itoa(my_num)+".txt"
             os.Create(file_name)
             fmt.Println("Creating File ", file_name)
-            creates++
+            creates = creates + 1
 
         } else if this_action == "Delete_File" {
 
@@ -171,7 +198,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
                 if !file.IsDir() {
                     os.RemoveAll(cur_dir + new_file_name)
                     fmt.Println("Deleting File ", cur_dir + new_file_name)
-                    deletes++
+                    deletes = deletes + 1
                     break
                 }
             }
