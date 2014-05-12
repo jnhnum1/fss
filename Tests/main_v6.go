@@ -212,7 +212,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
                     //open_file,_ := os.OpenFile(cur_dir + new_file_name, syscall.O_APPEND,  0777)
                     wr_str := []byte(strconv.Itoa(my_num))
                     err := ioutil.WriteFile(cur_dir + new_file_name,wr_str,0777)
-                    fmt.Println("Modifying File ", cur_dir + new_file_name, wr_str)
+                    fmt.Println("Modifying File ", cur_dir + new_file_name, wr_str, err)
                     break
                 }
             }
