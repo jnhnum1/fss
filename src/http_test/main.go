@@ -56,13 +56,19 @@ func main() {
     rpc.Register(&Server{})
     rpc.HandleHTTP()
     l, e := net.Listen("tcp", ":1235")
-    if e != nil {
-      log.Fatal("listen error:", e)
-    } else {
-      defer l.Close()
-      fmt.Println("listening for requests...")
-      http.Serve(l, nil)
-    }
+    go func(){
+	    if e != nil {
+    	  log.Fatal("listen error:", e)
+	    } else {
+    	  defer l.Close()
+	      fmt.Println("listening for requests...")
+    	  http.Serve(l, nil)
+    	}
+  }()
+  }
+  for{
+	  time.Sleep(time.Second*5)
+	  fmt.Println("Tick")
   }
   if address != "" {
     for i := 0; i < 10; i++ {

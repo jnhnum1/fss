@@ -115,12 +115,24 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
 func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
     for i := 0; i<nservers; i++ {
-        for j := 0; j<nservers; j++ {
-            if j != i {
-              tnts[i].SyncWrapper(j,"./")
-            }
-        }
+        tnts[0].SyncWrapper(i,"./")
     }
+
+    for i := 0; i<nservers; i++ {
+        tnts[i].SyncWrapper(0,"./")
+    }
+
+    for i := 0; i<nservers; i++ {
+        tnts[0].SyncWrapper(i,"./")
+    }
+
+    // for i := 0; i<nservers; i++ {
+    //     for j := 0; j<nservers; j++ {
+    //         if j != i {
+    //           tnts[i].SyncWrapper(j,"./")
+    //         }
+    //     }
+    // }
 
 }
 
@@ -219,7 +231,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
                 file,_ := os.Lstat(cur_dir + new_file_name)
                 fmt.Println(file,cur_dir,cur_dir + new_file_name)
                 if file.IsDir() {
-                    cur_dir = root + new_file_name + "/"
+                    cur_dir = cur_dir + new_file_name + "/"
                     fmt.Println("Moving Down to ", cur_dir)
                     break
                 }
