@@ -11,4 +11,9 @@ for ii = 1:size(all_data,1)
     end
 end
 
-new_data = [final_data(:,2,1),sum(final_data(:,4,:),3)];
+new_data = [sum(final_data(:,4,:),3),final_data(:,2,1)];
+new_data2 = [sum(final_data(:,4,:),3)-sum(final_data(:,3,:),3),final_data(:,2,1)];
+
+figure; plot(new_data(:,1),new_data(:,2)); title('Meta-Data Overhead'); xlabel('Files Created'); ylabel(' Meta-Data Overhead (Bytes)')
+
+figure; plot(new_data2(:,1),new_data2(:,2));

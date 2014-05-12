@@ -1,4 +1,4 @@
-package TnT_v4
+package TnT_final
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
 	//Propagate the changes in a version vector upwards
 
 	fst := tnt.Tree.MyTree // for ease of code
-	fmt.Println("PROPAGATE UP: path ",path)
 	tnt.ParseTree("./",0)
 
 	setMaxVersionVect(fst[path].VerVect, VersionVector)
@@ -25,6 +24,7 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
 }
 
 func (tnt *TnTServer) UpdateTreeWrapper(path string) {
+
 	fst := tnt.Tree.MyTree
 
 	tnt.Tree.LogicalTime += 1
@@ -45,7 +45,6 @@ func (tnt *TnTServer) UpdateTreeWrapper(path string) {
 func (tnt *TnTServer) DeleteTree(path string) {
 	// Deletes entire sub-tree under 'path' from FStree
 
-	//fmt.Println(tnt.me, "DELETE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	if _, present := fst[path]; present {
@@ -71,7 +70,6 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	reachable from the root. It is fine if stuff under 'path' are not in FST already.
 	*/
 
-	fmt.Println(tnt.me, "UPDATE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	fi, err := os.Lstat(tnt.root + path)
@@ -117,6 +115,11 @@ func (tnt *TnTServer) UpdateTree(path string) {
 			fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
 		}
 	} else {
+
+		if fst[path].LastModTime.Equal(fi.ModTime()) == false {
+			fst[path].LastModTime = fi.ModTime()
+			fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+		}
 
 		d, err := os.Open(tnt.root + path)
 		defer d.Close()

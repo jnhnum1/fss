@@ -1,4 +1,4 @@
-package TnT_v4
+package TnT_final
 
 import (
     "code.google.com/p/go.exp/inotify"

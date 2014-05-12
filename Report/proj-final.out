@@ -1,9 +1,11 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [1][-]{section.2}{Goals}{}% 2
-\BOOKMARK [1][-]{section.3}{System Design}{}% 3
-\BOOKMARK [2][-]{subsection.3.1}{File Watcher}{section.3}% 4
-\BOOKMARK [2][-]{subsection.3.2}{Synchronization}{section.3}% 5
-\BOOKMARK [2][-]{subsection.3.3}{Failure Recovery}{section.3}% 6
-\BOOKMARK [2][-]{subsection.3.4}{Meta-data costs}{section.3}% 7
-\BOOKMARK [1][-]{section.4}{Implementation Details}{}% 8
-\BOOKMARK [1][-]{section.5}{Project Evaluation}{}% 9
+\BOOKMARK [1][-]{section.2}{System Design}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{File Watcher}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Synchronization}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Failure Recovery}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Meta-data costs}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Implementation Details}{}% 7
+\BOOKMARK [1][-]{section.4}{Project Evaluation}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Correctness}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Metadata overhead}{section.4}% 10
+\BOOKMARK [1][-]{section.5}{Acknowledgements}{}% 11

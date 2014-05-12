@@ -1,4 +1,4 @@
-package TnT_v4
+package TnT_final
 
 import (
 	"fmt"
@@ -114,45 +114,21 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
 	fmt.Println("in start server",tnt.Tree)
 
 	go tnt.FST_watch_files(tnt.root)
+
 	//RPC TCP
 	rpc.Register(tnt)
-    rpc.HandleHTTP()
-    l, e := net.Listen("tcp", ":1235")
-    tnt.l=l
+	rpc.HandleHTTP()
+	l, e := net.Listen("tcp", ":1235")
+	tnt.l=l
 	go func(){
-	    if e != nil {
-    	  log.Fatal("listen error:", e)
-    	  
-	    } else {
-	          defer l.Close()
-    	  fmt.Println("listening for requests...")
-		  http.Serve(l, nil)
-    	}
+		if e != nil {
+			log.Fatal("listen error:", e)
+		} else {
+			defer l.Close()
+			fmt.Println("listening for requests...")
+			http.Serve(l, nil)
+		}
 	}()
-	// RPC set-up borrowed from Lab
-	//rpcs := rpc.NewServer()
-	//rpcs.Register(tnt)
-	//os.Remove(servers[me])
-	//l, e := net.Listen("unix", servers[me]);
-	//if e != nil {
-	//	log.Fatal("listen error: ", e);
-	//}
-	//tnt.l = l
-
-	//go func() {
-	//	for tnt.dead == false {
-	//		conn, err := tnt.l.Accept()
-	//		if err == nil && tnt.dead == false {
-	//			go rpcs.ServeConn(conn)
-	//		} else if err == nil {
-	//			conn.Close()
-	//		}
-	//		if err != nil && tnt.dead == false {
-	//			fmt.Printf("TnTServer(%v) accept: %v\n", me, err.Error())
-	//			tnt.Kill()
-	//		}
-	//	}
-	//}()
 
 	return tnt
 }
