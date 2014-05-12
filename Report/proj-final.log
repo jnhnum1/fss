@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.10.10)  12 MAY 2014 00:06
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.10.10)  12 MAY 2014 00:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1075,14 +1075,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 2--3
 
  []
 
-
+[2]
 Underfull \hbox (badness 10000) in paragraph at lines 4--5
 
  []
 
-) (./5_project_evaluation.tex [2])
+) (./5_project_evaluation.tex) [3]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 33.
- [3]
+ [4]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 33.
  (./proj-final.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 33.
@@ -1096,13 +1096,13 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 33.
 ### simple group (level 1) entered at line 15 ({)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 18416 strings out of 495059
- 350582 string characters out of 3182029
+ 18417 strings out of 495059
+ 350588 string characters out of 3182029
  451756 words of memory out of 3000000
  21158 multiletter control sequences out of 15000+200000
  33249 words of font info for 83 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 58i,8n,65p,1029b,387s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 58i,8n,65p,1029b,482s stack positions out of 5000i,500n,10000p,200000b,50000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texli
@@ -1110,10 +1110,10 @@ ve/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/urw/palatino/uplb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1
 /urw/palatino/uplr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/palatin
 o/uplri8a.pfb>
-Output written on proj-final.pdf (3 pages, 82392 bytes).
+Output written on proj-final.pdf (4 pages, 83134 bytes).
 PDF statistics:
- 102 PDF objects out of 1000 (max. 8388607)
- 90 compressed objects within 1 object stream
- 16 named destinations out of 1000 (max. 500000)
+ 106 PDF objects out of 1000 (max. 8388607)
+ 93 compressed objects within 1 object stream
+ 17 named destinations out of 1000 (max. 500000)
  93 words of extra memory for PDF output out of 10000 (max. 10000000)
 
