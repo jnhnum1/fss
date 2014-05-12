@@ -328,7 +328,7 @@ func main() {
     for j:=0;j<5;j++{
       for i:=0; i<nservers; i++ {
 
-          go EditDirectory(10, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
+          go EditDirectory(50, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
       }
       for i:=0;i<nservers;i++{
           <-c[i]
