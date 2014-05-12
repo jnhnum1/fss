@@ -1,14 +1,14 @@
 package main
 
-import{
+import(
 	"fmt"
 	"os"
 	"path/filepath"
 	"ioutil"
-}
+)
 
 
-func DFT(dirname string, depth int ,str string)string {
+func DFT(dirname string, depth int ,str string) string {
     d, err := os.Open(dirname)
     if err != nil {
         fmt.Println(err)
