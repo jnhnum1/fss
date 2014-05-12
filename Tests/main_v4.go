@@ -310,7 +310,7 @@ func main() {
     }
     //c := make(chan int)
     stop_all := make(chan int)
-    for j:=1;j<100;j++{
+    for j:=1;j<5;j++{
       for i:=0; i<nservers; i++ {
 
           go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
