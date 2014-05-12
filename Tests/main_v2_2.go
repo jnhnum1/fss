@@ -46,12 +46,11 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
 	var peers []string = make([]string, nservers)
 	var tnts []*TnT_v2_2.TnTServer = make([]*TnT_v2_2.TnTServer, nservers)
 
-	for i:=0; i<nservers; i++ {
-		peers[i] = port(tag, i)
-	}
+	peers[1]="12"
+	peers[2]="12"
 
 	for i:=0; i<nservers; i++ {
-		//tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
+		tnts[i] = TnT_single.StartServer(peers, i, common_root+strconv.Itoa(i)+"/", fname)
 
         //os.RemoveAll(common_root+strconv.Itoa(i)+"/")
         //os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
@@ -66,7 +65,7 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
 
 func main() {
 
-	const nservers = 3
+	const nservers = 2
 	//printfiles(nservers)
 
 	tnts, clean := setup("sync", nservers)
