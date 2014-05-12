@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"fmt"
 )
 
 func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[int]int64, path string) {
