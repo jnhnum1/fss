@@ -281,6 +281,8 @@ func main() {
 
     stop_all := make(chan int)
 
+    SyncAll(nservers, tnts)
+
     for j:=1;j<5;j++{
       for i:=0; i<nservers; i++ {
 
