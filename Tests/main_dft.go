@@ -36,6 +36,6 @@ func DFT(dirname string, depth int ,str string) string {
 }
 
 func main(){
-	fmt.Println(DFT("../roots/nest0",0,""))
-	fmt.Println(DFT("../roots/nest1",0,""))
+	fmt.Println(DFT("../roots/nest0/",0,""))
+	fmt.Println(DFT("../roots/nest1/",0,""))
 }
