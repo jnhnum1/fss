@@ -7,7 +7,7 @@ import (
   "os"
   "strconv"
   "TnT_v2_2"
-  "path/filepath"
+  //"path/filepath"
 )
 
 const (
@@ -30,8 +30,6 @@ func cleanup(tnts []*TnT_v2_2.TnTServer) {
     tnts[i].Kill()
   }
 }
-
-
 
 func SyncAll(nservers int, tnts []*TnT_v2_2.TnTServer){
 
@@ -59,7 +57,7 @@ func setup(tag string, nservers int) ([]*TnT_v2_2.TnTServer, func()) {
         //os.Remove("../TestsDeepak/WatchLog"+strconv.Itoa(i))
         //os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
 
-		tnts[i]=TnT_v2_2.StartServer(peers, i, common_root+"nest"+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/")
+		tnts[i]=TnT_v2_2.StartServer(peers, i, common_root+"nest"+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/", false)
 	}
 
 	clean := func() { (cleanup(tnts)) }
@@ -89,7 +87,7 @@ func main() {
 
 		if 0 <= a && a < nservers && 0 <= b && b < nservers && a != b {
 			tnts[a].SyncWrapper(b,"./")
-			print_tree(nservers)
+			//print_tree(nservers)
 		}
 
 		fmt.Println("-----------------------------")

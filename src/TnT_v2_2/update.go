@@ -110,6 +110,11 @@ func (tnt *TnTServer) UpdateTree(path string) {
 		}
 	} else {
 
+		if fst[path].LastModTime.Equal(fi.ModTime()) == false {
+			fst[path].LastModTime = fi.ModTime()
+			fst[path].VerVect[tnt.me] = tnt.Tree.LogicalTime
+		}
+
 		d, err := os.Open(tnt.root + path)
 		defer d.Close()
 		cfi, err := d.Readdir(-1)
