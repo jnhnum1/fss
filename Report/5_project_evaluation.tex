@@ -6,9 +6,7 @@ We will test the system developed on up to 5 concurrent machines for:
 
 The test updates a machine's files in a variety of ways on any branch of its directory.  It creates and deletes files and directories, and also modifies the contents of files.  The test does not check for renames or moves because TnT treats each of those actions as a delete then create.  Once the updates and synchronizations are done, the test writes the directories, files and their contents to a string and hashes that string to a number.  If the hashed numbers are the same, then the directories are all up to date.
 
-The test has the machines update their file directories 200 times, then it synchronizes two randomly selected machines.  The process of update then synchronize occurs 100 times totaling 100,000 directory updates per test.  We ran this test 10 times and our results show that the hashes are the same for each of the 10 experiments.
-
-
+The test has the machines update their file directories 200 times, then it synchronizes two randomly selected machines.  The process of update then synchronize occurs 100 times totaling 100,000 directory updates per test.  We ran this test 10 times and our results show that the hashes are the same for each of the 10 experiments.  We also tested TnT across 3 physical machines for consistency.
 
 \subsection{\bf Metadata overhead} For efficient operation, the metadata used at any point of time should be proportional to the size of the file system tree. When files are deleted by all the synchronizing peers, they should not contribute to metadata.  To test whether the metadata overhead does in fact scale with the size of the file system, we measure the size of metadata for a machine over time against the number of files created.  The measurement is taken during a normal experiment of with 5 machines where files and directories are randomly created and deleted.  
 
