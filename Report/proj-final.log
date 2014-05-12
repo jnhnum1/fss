@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  11 MAY 2014 21:11
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  11 MAY 2014 21:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1099,16 +1099,16 @@ LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <10.95> not available
 (./1_introduction.tex
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <17.28> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 1.
-) (./2_goals.tex) (./3_system_design.tex
+) (./2_goals.tex) (./3_system_design.tex [1
+
+{/usr/local/texlive/2013/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Font shape `T1/ppl/bx/n' in size <14.4> not available
 (Font)              Font shape `T1/ppl/b/n' tried instead on input line 5.
 LaTeX Font Info:    Try loading font information for T1+pcr on input line 6.
 
 (/usr/local/texlive/2013/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
-) [1
-
-{/usr/local/texlive/2013/texmf-var/fonts/map/pdftex/updmap/pdftex.map}])
+))
 (./4_implementation_details.tex
 Underfull \hbox (badness 10000) in paragraph at lines 2--3
 
@@ -1149,7 +1149,7 @@ usr/local/texlive/2013/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/loca
 l/texlive/2013/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texli
 ve/2013/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2013
 /texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on proj-final.pdf (3 pages, 80632 bytes).
+Output written on proj-final.pdf (3 pages, 81088 bytes).
 PDF statistics:
  97 PDF objects out of 1000 (max. 8388607)
  85 compressed objects within 1 object stream
