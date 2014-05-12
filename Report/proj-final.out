@@ -4,5 +4,6 @@
 \BOOKMARK [2][-]{subsection.3.1}{File Watcher}{section.3}% 4
 \BOOKMARK [2][-]{subsection.3.2}{Synchronization}{section.3}% 5
 \BOOKMARK [2][-]{subsection.3.3}{Failure Recovery}{section.3}% 6
-\BOOKMARK [1][-]{section.4}{Implementation Details}{}% 7
-\BOOKMARK [1][-]{section.5}{Project Evaluation}{}% 8
+\BOOKMARK [2][-]{subsection.3.4}{Meta-data costs}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Implementation Details}{}% 8
+\BOOKMARK [1][-]{section.5}{Project Evaluation}{}% 9
