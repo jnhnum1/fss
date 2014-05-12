@@ -13,7 +13,7 @@ func (tnt *TnTServer) PropagateUp(VersionVector map[int]int64, SyncVector map[in
 	//Propagate the changes in a version vector upwards
 
 	fst := tnt.Tree.MyTree // for ease of code
-	fmt.Println("PROPAGATE UP: path ",path)
+	//fmt.Println("PROPAGATE UP: path ",path)
 	tnt.ParseTree("./",0)
 
 	setMaxVersionVect(fst[path].VerVect, VersionVector)
@@ -36,6 +36,7 @@ func (tnt *TnTServer) DeleteTree(path string) {
 	fst := tnt.Tree.MyTree
 
 	if _, present := fst[path]; present {
+		fmt.Println(tnt.me, "DELETE TREE: deleting path:", path)
 		// Delete all children; recursively delete if child is a directory
 		delete(fst[fst[path].Parent].Children, path)
 		for child, _ := range fst[path].Children {
@@ -58,7 +59,7 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	reachable from the root. It is fine if stuff under 'path' are not in FST already.
 	*/
 
-	fmt.Println(tnt.me, "UPDATE TREE:", path)
+	//fmt.Println(tnt.me, "UPDATE TREE:", path)
 	fst := tnt.Tree.MyTree
 
 	fi, err := os.Lstat(tnt.root + path)
@@ -69,6 +70,8 @@ func (tnt *TnTServer) UpdateTree(path string) {
 	}
 
 	if _, present := fst[path]; present == false {
+
+		fmt.Println(tnt.me, "UPDATE TREE: created path:", path)
 		fst[path] = new(FSnode)
 		fst[path].Name = fi.Name()
 		fst[path].Size = fi.Size()
