@@ -43,7 +43,7 @@ func (tnt *TnTServer) GetVersion(args *GetVersionArgs, reply *GetVersionReply) e
 		reply.VerVect, reply.SyncVect, reply.Children = fsn.VerVect, fsn.SyncVect, fsn.Children
 		reply.Creator, reply.CreationTime = fsn.Creator, fsn.CreationTime
 	}
-	fmt.Println("GET VERSION:", args.Path, reply)
+	//fmt.Println("GET VERSION:", args.Path, reply)
 	return nil
 }
 
@@ -103,8 +103,8 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
 		decoder.Decode(&fst1)
 		tnt.Tree = &fst1
 
-		fmt.Println(fst1.DelFiles)
-		fmt.Println(fst1.NewFiles)
+		//fmt.Println(fst1.DelFiles)
+		//fmt.Println(fst1.NewFiles)
 
 		tnt.mu.Lock()
 		tnt.Apply()

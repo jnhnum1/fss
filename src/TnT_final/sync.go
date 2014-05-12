@@ -66,7 +66,7 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 			tnt.SyncFile(srv, path)
 		}
 		tnt.LogToFile()
-		tnt.ParseTree("./", 0)
+		//tnt.ParseTree("./", 0)
 		tnt.PrintTmp()
 		tnt.Apply()
 		tnt.LogToFile()
@@ -133,18 +133,18 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 	var syncVect map[int]int64
 
 	if action == DO_NOTHING {
-		fmt.Println("ACTION:", tnt.me, "has nothing to do for", path)
+		//fmt.Println("ACTION:", tnt.me, "has nothing to do for", path)
 		live_ancestor := tnt.LiveAncestor(path) // should be the parent actually
 		syncVect = MaxVersionVect(fst[live_ancestor].SyncVect, reply.SyncVect)
 		exists = false
 	} else if action == DELETE {
-		fmt.Println("ACTION:", tnt.me, "is deleting", path, "due to", srv)
+		//fmt.Println("ACTION:", tnt.me, "is deleting", path, "due to", srv)
 		tnt.DeleteDir(path)
 		syncVect = MaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		tnt.DeleteTree(path)
 		exists = false
 	} else if action == UPDATE {
-		fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv)
+		//fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv)
 		if exists == false {
 			ts, _ := tnt.CopyDirFromPeer(srv, path, path)
 
@@ -230,7 +230,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
 		exists = true
 	} else /* action == SYNC_DOWN */ {
-		fmt.Println("ACTION:", tnt.me, "is only syncing down for", path)
+		//fmt.Println("ACTION:", tnt.me, "is only syncing down for", path)
 		setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		tnt.OnlySync(path)
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
@@ -285,7 +285,6 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 	} else if reply.Exists == true && exists == false {
 		live_ancestor := tnt.LiveAncestor(path)
 		mA_vs_sB := compareVersionVects(reply.VerVect, fst[live_ancestor].SyncVect)
-		fmt.Println("UPDATE-DELETE:", path, live_ancestor, fst[live_ancestor].SyncVect, reply.Creator, reply.CreationTime, reply.VerVect, reply.SyncVect)
 		if mA_vs_sB == LESSER || mA_vs_sB == EQUAL {
 			action = DO_NOTHING
 		} else if fst[live_ancestor].SyncVect[reply.Creator] < reply.CreationTime {
@@ -316,7 +315,6 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 						choice = srv
 					}
 				}
-				
 			}
 			if choice == tnt.me {
 				action = DO_NOTHING
@@ -330,7 +328,7 @@ func (tnt *TnTServer) SyncFile(srv int, path string) (bool, map[int]int64, map[i
 	var syncVect map[int]int64
 
 	if action == DO_NOTHING {
-		fmt.Println("ACTION:", tnt.me, "has nothing to do for", path)
+		//fmt.Println("ACTION:", tnt.me, "has nothing to do for", path)
 		if exists == true {
 			setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 			verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
