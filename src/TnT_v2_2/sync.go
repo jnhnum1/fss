@@ -179,6 +179,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			fst[path].Parent = parent(path)
 			fst[parent(path)].Children[path] = true
 
+			fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
 			setVersionVect(fst[path].VerVect, reply.VerVect)
 			//setMaxVersionVect(fst[path].SyncVect, reply.SyncVect) // done outside of 'if'
 		}
@@ -230,8 +231,13 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 				}
 			}
 		}
-		fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
+
+		//fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
+		if fst[path].Creator > reply.Creator {
+			fst[path].Creator, fst[path].CreationTime = reply.Creator, reply.CreationTime
+		}
 		//setVersionVect(fst[path].VerVect, reply.VerVect)
+		setMaxVersionVect(fst[path].VerVect, reply.VerVect)
 		if was_child == true {
 			setVersionVect(fst[path].SyncVect, newSyncVect)
 			setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
