@@ -51,7 +51,7 @@ func setup(tag string, nserver int,nservers int) (*TnT_final.TnTServer, func()) 
 }
 
 func main() {
-	nserver:=0
+	nserver:=1
 	nservers:=2
 	tnts, clean := setup("sync", nserver,nservers)
 	defer clean()
@@ -68,7 +68,7 @@ func main() {
 		if err != nil {
 			fmt.Println("Scanf error:", n, err)
 		}
-		tnts.SyncWrapper(1,"./")
+		tnts.SyncWrapper(0,"./")
 
 
 		fmt.Println("-----------------------------")
