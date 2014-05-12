@@ -1,4 +1,4 @@
-package TnT_v2_2
+package TnT_v2_3
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"math/big"
 	"strconv"
+
 )
 
 const (
@@ -182,6 +183,7 @@ func rand_string(n int) string {
 
 func call(srv string, rpcname string,
             args interface{}, reply interface{}) bool {
+    fmt.Println("Calling:",srv,rpcname,args,reply)
 	c, errx := rpc.DialHTTP("tcp", srv + ":1235")
 	if errx != nil {
 		return false

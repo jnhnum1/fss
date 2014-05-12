@@ -65,11 +65,12 @@ func main() {
     	  http.Serve(l, nil)
     	}
   }()
-  }
-  for{
+    for{
 	  time.Sleep(time.Second*5)
 	  fmt.Println("Tick")
   }
+  }
+
   if address != "" {
     for i := 0; i < 10; i++ {
       go func(i int) {

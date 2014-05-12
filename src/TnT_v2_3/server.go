@@ -1,4 +1,4 @@
-package TnT_v2_2
+package TnT_v2_3
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"os"
 	"encoding/gob"
 	"time"
+	"net/http"
 	//"path/filepath"
 )
 
@@ -119,14 +120,16 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
     rpc.HandleHTTP()
     l, e := net.Listen("tcp", ":1235")
     tnt.l=l
-    if e != nil {
-      log.Fatal("listen error:", e)
-    } else {
-      defer l.Close()
-      fmt.Println("listening for requests...")
-	  go http.Serve(l, nil)
-    }
-
+	go func(){
+	    if e != nil {
+    	  log.Fatal("listen error:", e)
+    	  
+	    } else {
+	          defer l.Close()
+    	  fmt.Println("listening for requests...")
+		  http.Serve(l, nil)
+    	}
+	}()
 	// RPC set-up borrowed from Lab
 	//rpcs := rpc.NewServer()
 	//rpcs.Register(tnt)
