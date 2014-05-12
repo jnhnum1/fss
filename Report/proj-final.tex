@@ -12,7 +12,7 @@ Deepak Vasisht \\ \normalsize deepakv@mit.edu
 
 \maketitle
 
-\abstract{We build a peer-to-peer file-system synchronizer, based on \href{http://swtch.com/tra/}{Tra}, which is performant and resilient to system crashes. We implement our file-system synchronizer in Go and ensure that all the guarantees for a file synchronizer mentioned in Tra are satisfied. We handle the system going offline by storing the metadata on the disk and using a two-phase synchronization method to ensure that crashes do not effect the system adversely even if they happen during sync.  We robustly test TnT's correctness across 5 machines making 1000 synchronizations across machines. Our results show that TnT successfully synchronizes across 5 machines. 
+ 
 
 
 \input{1_introduction}
