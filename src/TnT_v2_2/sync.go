@@ -236,7 +236,7 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 			setVersionVect(fst[path].SyncVect, newSyncVect)
 			setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		} else {
-			setVersionVect(fst[path].SyncVect, reply.SyncVect)
+			setMaxVersionVect(fst[path].SyncVect, reply.SyncVect)
 		}
 		verVect, syncVect = fst[path].VerVect, fst[path].SyncVect
 		exists = true
