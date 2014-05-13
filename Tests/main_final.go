@@ -91,7 +91,7 @@ func parent(path string) string {
 func setup(tag string, nservers int) ([]*TnT_final.TnTServer, func()) {
 
   	var peers []string = make([]string, nservers)
-  	var tnts []*TnT_v2_2.TnTServer = make([]*TnT_v2_2.TnTServer, nservers)
+  	var tnts []*TnT_final.TnTServer = make([]*TnT_final.TnTServer, nservers)
 
   	for i:=0; i<nservers; i++ {
     	peers[i] = port(tag, i)
