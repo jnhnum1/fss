@@ -111,6 +111,7 @@ func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) error {
 		if ok {
 			break
 		}
+		time.Sleep(RPC_SLEEP_INTERVAL)
 	}
 
 	if reply.Err != nil {

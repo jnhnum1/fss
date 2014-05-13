@@ -31,16 +31,10 @@ func (tnt *TnTServer) Apply() {
 	for i:=0; i < len(NewFiles); i++ {
 		newData := NewFiles[i]
 		if newData.IsDir {
-			err := os.Rename(tnt.tmp + newData.TmpName, tnt.root + newData.Path)
-			if err!=nil {
-				log.Println(tnt.me, ": Error writing directory:",err)
-			}
-			/*
 			err := os.Mkdir(tnt.root+newData.Path, newData.Perm)
 			if err!=nil {
 				log.Println(tnt.me, ": Error writing directory:",err)		
 			}
-			*/
 		} else {
 			err := os.Rename(tnt.tmp + newData.TmpName, tnt.root + newData.Path)
 			if err!=nil {
@@ -161,14 +155,14 @@ func (tnt *TnTServer) SyncDir(srv int, path string) (bool, map[int]int64, map[in
 	} else if action == UPDATE {
 		fmt.Println("ACTION:", tnt.me, "is updating", path, "from", srv)
 		if exists == false {
-			ts, _ := tnt.CopyDirFromPeer(srv, path, path)
+			tnt.CopyDirFromPeer(srv, path, path)
 
 			// Create new FSnode
 			fst[path] = new(FSnode)
 			fst[path].Name = strings.TrimPrefix(path, parent(path))
 			//fst[path].Size = fi.Size()
 			fst[path].IsDir = true
-			fst[path].LastModTime = ts
+			//fst[path].LastModTime = ts
 			fst[path].Children = make(map[string]bool)
 			fst[path].VerVect = make(map[int]int64)
 			fst[path].SyncVect = make(map[int]int64)
