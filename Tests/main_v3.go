@@ -173,7 +173,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
                 file,_ := os.Lstat(cur_dir + new_file_name )
                 fmt.Println(file,cur_dir,cur_dir + new_file_name )
                 if file.IsDir() {
-                    os.RemoveAll(cur_dir + new_file_name + "/")
+                    os.RemoveAll(cur_dir + new_file_name + "a/")
                     fmt.Println("Deleting Directory", cur_dir + new_file_name + "/")
                     break
                 }
