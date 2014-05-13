@@ -111,7 +111,9 @@ func StartServer(servers []string, me int, root string, dump string, tmp string,
 		tnt.LogToFile()
 		tnt.mu.Unlock()
 	}
+	tnt.mu.Lock()
 	tnt.UpdateTreeWrapper("./")
+	tnt.mu.Unlock()
 	fmt.Println("in start server",tnt.Tree)
 
 	go tnt.FST_watch_files(tnt.root)

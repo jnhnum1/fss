@@ -102,14 +102,10 @@ func (tnt *TnTServer) GetDir(args *GetDirArgs, reply *GetDirReply) error {
   return nil
 }
 
-func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) (time.Time, error) {
+func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) error {
 
 	args := &GetDirArgs{Path:path}
 	var reply GetDirReply
-
-	rand_name := rand_string(2)
-	var ts time.Time
-
 	for {
 		ok := call(tnt.servers[srv], "TnTServer.GetDir", args, &reply)
 		if ok {
@@ -121,17 +117,10 @@ func (tnt *TnTServer) CopyDirFromPeer(srv int, path string, dest string) (time.T
 	if reply.Err != nil {
 		log.Println(tnt.me, ": Error opening Directory:", reply.Err)
 	} else {
-		err := os.Mkdir(tnt.tmp + rand_name, reply.Perm)
-		if err != nil {
-			log.Println(tnt.me, ": Error writing directory:", err)
-		} else {
-			tnt.Tree.NewFiles = append(tnt.Tree.NewFiles, NewData{TmpName:rand_name, Path:dest, IsDir:true, Perm:reply.Perm})
-		}
-		fi, err := os.Lstat(tnt.tmp + rand_name)
-		ts = fi.ModTime()
+		tnt.Tree.NewFiles = append(tnt.Tree.NewFiles, NewData{Path:dest, IsDir:true, Perm:reply.Perm})
 	}
 
-	return ts, reply.Err
+	return reply.Err
 }
 
 
