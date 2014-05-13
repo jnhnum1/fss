@@ -344,8 +344,15 @@ func main() {
     
     SyncAll(nservers, tnts)
     SyncAll(nservers, tnts)
+    var h [nservers]uint32
     for i:=0;i<nservers;i++{
     	fmt.Println(hash(DFT(common_root+strconv.Itoa(i)+"/",0,"")))
+      h[i]=hash(DFT(common_root+strconv.Itoa(i)+"/",0,""))
+      if(h[i]!=h[0]){
+        fmt.Println("Failed");
+        return
+      }
     }
+    fmt.Println("Passed.")
 }
 
