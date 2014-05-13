@@ -239,7 +239,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             
         }
         
-        time.Sleep(20 * time.Millisecond)
+        time.Sleep(100 * time.Millisecond)
     }
     fmt.Println(me, " am done ...")
     c <- 1
@@ -268,10 +268,10 @@ func main() {
     }
     //c := make(chan int)
     stop_all := make(chan int)
-    for j:=1;j<5;j++{
+    for j:=0;j<5;j++{
       for i:=0; i<nservers; i++ {
 
-          go EditDirectory(100, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
+          go EditDirectory(20, nservers, i, common_root+strconv.Itoa(i)+"/", tnts[i],c[i], stop_all)
       }
       for i:=0;i<nservers;i++{
           <-c[i]
