@@ -64,7 +64,12 @@ func (tnt *TnTServer) FST_watch_files(dirname string){
 
 						if err == nil {
 							if fi.IsDir(){
-								tnt.FST_set_watch(ev.Name, watcher)
+								//tnt.FST_set_watch(ev.Name, watcher)
+                                err := watcher.Watch(ev.Name)
+                                if err != nil {
+                                    log.Fatal(err)
+                                }
+                                
 								key_path = key_path + "/"
 							}
 						} else if fst[key_path + "/"] != nil {
