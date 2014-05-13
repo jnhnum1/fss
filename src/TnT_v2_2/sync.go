@@ -67,6 +67,12 @@ func (tnt *TnTServer) SyncWrapper(srv int, path string) {
 		}
 		tnt.LogToFile()
 		tnt.ParseTree("./", 0)
+		var a int
+		if !tnt.Test {
+			fmt.Println("You should crash")
+			fmt.Scanf("%d", &a)
+			fmt.Println(a)
+		}
 		tnt.PrintTmp()
 		tnt.Apply()
 		tnt.LogToFile()
