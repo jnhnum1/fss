@@ -39,7 +39,7 @@ func setup(tag string, nserver int,nservers int) (*TnT_final.TnTServer, func()) 
 /*	for i:=0; i<nservers; i++ {
 		peers[i] = port(tag, i)
 	}
-*/	peers[0]="128.31.34.232"
+*/	peers[0]="128.31.35.246"
 	peers[1]="128.30.31.206"
 
 
