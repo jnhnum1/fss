@@ -102,7 +102,7 @@ func setup(tag string, nservers int) ([]*TnT_final.TnTServer, func()) {
         os.RemoveAll(common_root+strconv.Itoa(i)+"/")
         os.Remove("../Tests/WatchLog"+strconv.Itoa(i))
         os.Mkdir(common_root+strconv.Itoa(i)+"/", 0777)
-  	    tnts[i]=TnT_v2_2.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/", true)
+  	    tnts[i]=TnT_final.StartServer(peers,i, common_root+strconv.Itoa(i)+"/", "WatchLog"+strconv.Itoa(i), common_root+"tmp"+strconv.Itoa(i)+"/", true)
   	}
 
   	clean := func() { (cleanup(tnts)) }
