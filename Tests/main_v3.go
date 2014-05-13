@@ -239,8 +239,7 @@ func EditDirectory(num_actions int, nservers int, me int, root string, tnt *TnT_
             
         }
         
-        
-        //time.Sleep(10 * time.Millisecond)
+        time.Sleep(20 * time.Millisecond)
     }
     fmt.Println(me, " am done ...")
     c <- 1
